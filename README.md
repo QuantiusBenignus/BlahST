@@ -16,10 +16,14 @@ Please, read the setup for [Blurt](https://github.com/QuantiusBenignus/blurt/) u
 * Open your GNOME system settings and find "Keyboard".
 * Under "Keyboard shortcuts", "View and customize shortcuts"
 * In the new window, scroll down to "Custom Shortcuts" and press it.
-* Press "+" to add a new shortcut and give it a name: "Blurt it already!"
+* Press "+" to add a new shortcut and give it a name: "Start recording speech"
 * In the "Command" field type `/home/yourusername/.local/wsi`
 * Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+a
 * Click Add and you are done. 
+
+The **wsi** script has a silence detection filter in the call to sox (rec) and would stop recording (in the best case) on 2 seconds of silence.
+
+In addition, if one does not want wait or has issues with the silence detection threshold:
 
 ###### Manual speech recording interuption
 For those who want to be able to interupt the recording manually with a key combination, in the spirit of great hacks, we are going to use the system built-in features:
