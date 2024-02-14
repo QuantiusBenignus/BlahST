@@ -2,7 +2,7 @@
 Input text from speech anywhere with GNOME keyboard shortcuts
 
 The inspiration for this little tool came from [Blurt](https://github.com/QuantiusBenignus/blurt/). 
-A simple GNOME extension that can input text from speech into any window with an ediatble text field.
+A simple GNOME extension that can input text from speech into any window with an editable text field.
 If you liked Blurt for its power vs simplicity ratio, you will love this.
 The work is, again, done by the *wsi* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
 The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system as described in [Blurt](https://github.com/QuantiusBenignus/blurt/).
