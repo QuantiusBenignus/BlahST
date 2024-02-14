@@ -12,3 +12,28 @@ The idea here is to not even write an extension like blurt. Just use a pair of h
 ### Setup
 Please, read the setup for [blurt](https://github.com/QuantiusBenignus/blurt/) up to the point of downloading the GNOME extension (which we do not need here).
 
+###### Hotkey to start recording of speech
+* Open your GNOME system settings and find "Keyboard".
+* Under "Keyboard shortcuts", "View and customize shortcuts"
+* In the new window, scroll down to "Custom Shortcuts" and press it.
+* Press "+" to add a new shortcut and give it a name: "Blurt it already!"
+* In the "Command" field type `/home/yourusername/.local/wsi`
+* Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+a
+* Click Add and you are done. 
+
+###### Manual speech recording interuption
+For those who want to be able to interupt the recording manually with a key combination, in the spirit of great hacks, we are going to use the system built-in features:
+* Open your GNOME system settings and find "Keyboard".
+* Under "Keyboard shortcuts", "View and customize shortcuts"
+* In the new window, scroll down to "Custom Shortcuts" and press it.
+* Press "+" to add a new shortcut and give it a name: "Blurt it already!"
+* In the "Command" field type `pkill --signal 2 rec`
+* Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+x
+* Click Add and you are done.
+  
+That Simple.  Just make sure that the new key binding has not been set-up already for something else.
+Now when the extension is recording speech, it can be stopped with the new key combo and transcription will start immediatelly.
+
+The `wsi` script will take care of sending the transcribed text to the PRIMARY selection / clipboard under, either X11 or Wayland.
+
+Then all one has to do is paste with the middle mouse button anywhere they want. 
