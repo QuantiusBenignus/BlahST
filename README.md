@@ -39,5 +39,4 @@ That Simple.  Just make sure that the new key binding has not been set-up alread
 Now when the extension is recording speech, it can be stopped with the new key combo and transcription will start immediatelly.
 
 The `wsi` script will take care of sending the transcribed text to the PRIMARY selection / clipboard under, either X11 or Wayland.
-
-Then all one has to do is paste with the middle mouse button anywhere they want. 
+Then all one has to do is paste it with the middle mouse button anywhere they want. 
