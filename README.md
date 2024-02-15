@@ -34,6 +34,8 @@ If transcribe is not in your $PATH, either edit the call to it in **wsi** to inc
 Inside the **wsi** script, near the begining, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables (described in the following section) have been collected. 
 Most can be left as is but the important one is the location of the whisper.cpp model file that you would like to use during transcription.
 
+##### GUI configuration of the hotkeys to start and stop speech input
+##### GNOME:
 ###### Hotkey to start recording of speech
 * Open your GNOME system settings and find "Keyboard".
 * Under "Keyboard shortcuts", "View and customize shortcuts"
@@ -60,5 +62,29 @@ For those who want to be able to interupt the recording manually with a key comb
 That Simple.  Just make sure that the new key binding has not been set-up already for something else.
 Now when the extension is recording speech, it can be stopped with the new key combo and transcription will start immediatelly.
 
+##### XFCE4:
+* Open the Xfce4 Settings Manager.
+* Navigate to Keyboard → Application Shortcuts.
+* Click on the Add button to create a new shortcut.
+* Enter the name of the shortcut and the command e.g. `pkill --signal 2 rec`.
+* Press the keys you wish to assign to the shortcut.
+* Click OK to save the shortcut.
+  
+##### KDE (Plasma):
+* Open the System Settings application.
+* Navigate to Shortcuts and then Custom Shortcuts.
+* Click on Edit and then New to create a new group for your shortcuts if needed.
+* Under the newly created group, click on New again and select Global Shortcut -> Command/URL.
+* Give your new shortcut a name.
+* Choose the desired shortcut key combination by clicking on the button next to "None" and pressing the keys you want to assign to the shortcut.
+* In the Trigger tab, specify the command or URL that should be executed when the shortcut is triggered.
+* Ensure that the Enabled checkbox is checked to activate the shortcut.
+* Apply the changes by clicking Apply or OK.
+
+Please, note that there may be slight variations in these steps depending on the version installed on your system.
+For many other environements, such as Mate, Cinnamon, LXQt, Deepin, etc. the steps should be somewhat simmilar to the examples above.
+Please, consult the documentation for your systems desktop environment.
+
+---
 The `wsi` script will take care of sending the transcribed text to the PRIMARY selection / clipboard under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. 
