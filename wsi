@@ -31,7 +31,7 @@ set -e
 
 # Store temp files in memory for speed and to reduce SSD/HDD "grinding":
 TEMPD='/dev/shm'
-# Default whisper.cpp model file for inference:
+# Default whisper.cpp model file for inference: POINT AT LOCATION OF YOUR WHISPER.CPP MODEL OF CHOICE!
 #model="$HOME/AI/Models/whisper/ggml-tiny.en.bin"
 model="$HOME/AI/Models/whisper/ggml-base.en.bin"
 # Hardcoded temp wav file to store the voice memo and get overwritten every time (in RAM):
