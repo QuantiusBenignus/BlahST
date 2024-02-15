@@ -13,7 +13,7 @@ The idea here is to not even write an extension like blurt. Just use a pair of h
 When speech input is initiated, a microphone indicator icon appears in the top bar and is shown for the duration of the recording.
 The disappearance of the microphone icon from the top bar indicates that the process is completed and **wsi** has "blurted" a snippet of text that can be pasted with the middle mouse button. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
 
-If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script instead, which uses the standard clipboard under X11 and Wayland (not the PRIMARY sellection).
+If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script (instead of **wsi**), which uses the standard clipboard under X11 and Wayland (not the PRIMARY sellection).
 In this case, it is advisable to relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it.
 Then pasting happens very fast with the left hand. Here is a demostration video:
 
@@ -25,15 +25,15 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 
 #### PREREQUISITES:
 - zsh or bash command line shell installation on a Linux system running GNOME.   
-- working whisper.cpp installation (see https://github.com/ggerganov/whisper.cpp
-- The orchestrator tool **wsi** from this repository **must be placed in your $HOME/.local/bin/ folder**.  
+- working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp)
+- The orchestrator tool **wsi** or **wrsi** from this repository **must be placed in your $HOME/.local/bin/ folder**.  
 - recent versions of 'sox', 'xsel' or 'wl-copy'  command-line tools from your system's repositories.
 -  A working microphone 
 > *DISCLAIMER: Some of the proposed actions, if implemented, will alter how your system works internally (e.g. systemwide temporary file storage and memory management). The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. Suggestions in this section are based on the author's choice and opinion and may not fit the taste or the particular situation of everyone; please, adjust as you like.*
 
 #### "INSTALLATION"
 *(Assuming whisper.cpp is installed and the "main" executable compiled with 'make' in the cloned whisper.cpp repo. See Prerequisites section)*
-* Place the script **wsi** in $HOME/.local/bin/  ( **It is advisable to run this script once from the command line to let it check for its dependencies** )
+* Place the scripts **wsi** and **wrsi** in $HOME/.local/bin/  ( **It is advisable to run once from the command line to let it check for its dependencies** )
 * Create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory. For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
 ```
 ln -s /full/path/to/whisper.cpp/main $HOME/.local/bin/transcribe
@@ -41,7 +41,7 @@ ln -s /full/path/to/whisper.cpp/main $HOME/.local/bin/transcribe
 If transcribe is not in your $PATH, either edit the call to it in **wsi** to include the absolute path, or add its location to the $PATH variable. Otherwise the script will fail.
  
 #### CONFIGURATION
-Inside the **wsi** script, near the begining, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables (described in the following section) have been collected. 
+Inside the **wsi** (or **wrsi**) script, near the begining, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables (described in the following section) have been collected. 
 Most can be left as is but the important one is the location of the whisper.cpp model file that you would like to use during transcription.
 
 ##### GUI configuration of the hotkeys to start and stop speech input
@@ -55,7 +55,7 @@ Most can be left as is but the important one is the location of the whisper.cpp 
 * Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+a
 * Click Add and you are done. 
 
-The **wsi** script has a silence detection filter in the call to sox (rec) and would stop recording (in the best case) on 2 seconds of silence.
+The **wsi** (**wrsi**) script has a silence detection filter in the call to sox (rec) and would stop recording (in the best case) on 2 seconds of silence.
 
 In addition, if one does not want wait or has issues with the silence detection threshold:
 
@@ -96,5 +96,8 @@ For many other environements, such as Mate, Cinnamon, LXQt, Deepin, etc. the ste
 Please, consult the documentation for your systems desktop environment.
 
 ---
-The `wsi` script will take care of sending the transcribed text to the PRIMARY selection / clipboard under, either X11 or Wayland.
+The `wsi` script will take care of sending the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. 
+
+if using **wrsi** (the two approaches can coexist), the transcribed text is sent to the clipboard under, either X11 or Wayland.
+Then pasting it happens as with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual.
