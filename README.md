@@ -1,15 +1,25 @@
 # cliblurt
-Input text from speech anywhere with GNOME keyboard shortcuts and whisper.cpp
+Input text from speech anywhere in Linux, with keyboard shortcuts and whisper.cpp
 
 The inspiration for this little tool came from [Blurt](https://github.com/QuantiusBenignus/blurt/). 
 A simple GNOME extension that can input text from speech into any window with an editable text field.
-If you liked Blurt for its power vs simplicity ratio, you will love this.
+If you liked Blurt for its power vs simplicity ratio, you will love this. 
+**This is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp**
+
 The work is, again, done by the *wsi* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
 The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system as described in [Blurt](https://github.com/QuantiusBenignus/blurt/).
 The idea here is to not even write an extension like blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp
 
 When speech input is initiated, a microphone indicator icon appears in the top bar and is shown for the duration of the recording.
 The disappearance of the microphone icon from the top bar indicates that the process is completed and **wsi** has "blurted" a snippet of text that can be pasted with the middle mouse button. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
+
+If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script instead, which uses the standard clipboard under X11 and Wayland (not the PRIMARY sellection).
+In this case, it is advisable to relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it.
+Then pasting happens very fast with the left hand. Here is a demostration video:
+
+
+https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
+
 
 ### SYSTEM SETUP
 
