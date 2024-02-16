@@ -101,4 +101,4 @@ The `wsi` script will take care of sending the transcribed text to the PRIMARY s
 Then all one has to do is paste it with the middle mouse button anywhere they want. 
 
 if using **wrsi** (the two approaches can coexist), the transcribed text is sent to the clipboard under, either X11 or Wayland.
-Then pasting it happens as with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual.
+Then pasting it happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual.
