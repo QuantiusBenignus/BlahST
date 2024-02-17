@@ -1,5 +1,6 @@
-# cliblurt
-Input text from speech anywhere in Linux, with keyboard shortcuts and whisper.cpp
+# BlahST
+**B**lah **S**peech to **T**ext
+Have a blahst pasting text from speech on Linux, with keyboard shortcuts and whisper.cpp
 
 The inspiration for this little tool came from [Blurt](https://github.com/QuantiusBenignus/blurt/). 
 A simple GNOME extension that can input text from speech into any window with an editable text field.
