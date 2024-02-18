@@ -26,15 +26,21 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 #### PREREQUISITES:
 - zsh or bash command line shell installation on a Linux system running GNOME.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or an active whisper.cpp server on your LAN (see network-transcription [section](https://github.com/QuantiusBenignus/BlahST/#network-transcription) below)
-- The orchestrator tool **wsi** or **wrsi** from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH**.  
+- The orchestrator tool **wsi**,[**wrsi**,**netwrsi**] from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH**.  
 - recent versions of 'sox', 'xsel' or 'wl-copy'  command-line tools from your system's repositories.
 -  A working microphone 
 > *DISCLAIMER: Some of the proposed actions, if implemented, will alter how your system works internally (e.g. systemwide temporary file storage and memory management). The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. Suggestions in this section are based on the author's choice and opinion and may not fit the taste or the particular situation of everyone; please, adjust as you like.*
 
 #### "INSTALLATION"
 *(Assuming whisper.cpp is installed and the "main" executable compiled with 'make' in the cloned whisper.cpp repo. See Prerequisites section)*
-* Place the scripts **wsi** and **wrsi** in $HOME/.local/bin/ and make them executable `chmod +x` ( **It is advisable to run once from the command line to let it check for its dependencies** )
-* Create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory. For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
+* Place the scripts **wsi** and **wrsi** in $HOME/.local/bin/
+* Make them executable
+  ```
+  cd $HOME/.local/bin; chmod +x w*si
+  ```
+* Run once from the command line to let the script(s) check for its dependencies
+* If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory.
+  For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
 ```
 ln -s /full/path/to/whisper.cpp/main $HOME/.local/bin/transcribe
 ```
@@ -42,7 +48,7 @@ If transcribe is not in your $PATH, either edit the call to it in **wsi** to inc
  
 #### CONFIGURATION
 Inside the **wsi** (or **wrsi**) script, near the begining, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables (described in the following section) have been collected. 
-Most can be left as is but the important one is the location of the whisper.cpp model file that you would like to use during transcription.
+Most can be left as is but the important one is the location of the whisper.cpp model file that you would like to use during transcription (or the IP and port number for the whisper.cpp server in **netwrsi**)
 
 ##### GUI configuration of the hotkeys to start and stop speech input
 ##### GNOME:
