@@ -25,7 +25,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 
 #### PREREQUISITES:
 - zsh or bash command line shell installation on a Linux system running GNOME.   
-- working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp)
+- working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or an active whisper.cpp server on your LAN (see network-transcription [section](https://github.com/QuantiusBenignus/BlahST/#network-transcription) below)
 - The orchestrator tool **wsi** or **wrsi** from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH**.  
 - recent versions of 'sox', 'xsel' or 'wl-copy'  command-line tools from your system's repositories.
 -  A working microphone 
@@ -70,7 +70,7 @@ For those who want to be able to interupt the recording manually with a key comb
 * Click Add and you are done.
   
 That Simple.  Just make sure that the new key binding has not been set-up already for something else.
-Now when the extension is recording speech, it can be stopped with the new key combo and transcription will start immediatelly.
+Now when the script is recording speech, it can be stopped with the new key combo and transcription will start immediatelly.
 
 ##### XFCE4:
 * Open the Xfce4 Settings Manager.
@@ -99,7 +99,7 @@ Please, consult the documentation for your systems desktop environment.
 This would be useful for Linux systems that need speech-to-text functionality but do not have the power to transcribe speech efficiently. 
 Speech is recorded on the local machine and sent over to a running instance of whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network.
 With an isntance of whisper.cpp server running on a LAN, this would still be considered offline speech recognition.
-To make the extension work in network transcription mode, one should use (create shortcuts for) the **netwsi** script (can be set up alongside the other two).
+To make this tool work in network transcription mode, one should use (create shortcuts for) the **netwsi** script (can be set up alongside the other two).
 
 **netwsi** can be found in this repository and should also be placed in $HOME/.local/bin. 
 
