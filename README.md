@@ -96,10 +96,10 @@ For many other environements, such as Mate, Cinnamon, LXQt, Deepin, etc. the ste
 Please, consult the documentation for your systems desktop environment.
 
 ##### Network transcription
-This would be useful for Linux systems that need speec-to-text functionality but do not have the power to transcribe speech efficiently. 
+This would be useful for Linux systems that need speech-to-text functionality but do not have the power to transcribe speech efficiently. 
 Speech is recorded on the local machine and sent over to a running instance of whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network.
 With an isntance of whisper.cpp server running on a LAN, this would still be considered offline speech recognition.
-To make the extension work in network transcription mode, one should use (create shortcuts for) the **netwsi** script (can be st up alongside the other two).
+To make the extension work in network transcription mode, one should use (create shortcuts for) the **netwsi** script (can be set up alongside the other two).
 
 **netwsi** can be found in this repository and should also be placed in $HOME/.local/bin. 
 
@@ -111,12 +111,12 @@ Please, run the script from the command line first to check for its dependencies
 
 ---
 ##### Summary
-* The `wsi` script will use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
+* On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection) , use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense here) 
 
-* If using **wrsi** (the approaches can coexist), the transcribed text is sent to the clipboard under, either X11 or Wayland.
+* If using **wrsi** (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard under, either X11 or Wayland.
 Then pasting it happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual. (For mopst people, right-hand hotkeys would work well.)
 
-* If transcribing over the network with **netwrsi**, the script will attempt to send the recorded audio to a running, properly set whisper.cpp server on a dedicated more capable machine.
+* If transcribing over the network with **netwrsi** (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server on a dedicated more capable machine.
   It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (by default, but it could be configured to use the middle mouse button).
   
