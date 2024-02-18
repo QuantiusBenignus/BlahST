@@ -1,10 +1,10 @@
 # BlahST
-**Blah** **S**peech-to-**T**ext will let you have a bla(h)st pasting text from speech on Linux, with keyboard shortcuts and whisper.cpp
+**Blah** **S**peech-to-**T**ext will let you have a bla(h)st pasting text from speech on Linux, with keyboard shortcuts and whisper.cpp. Fire up your microphone and input text the AI way.
 
 The inspiration for this little tool for Linux came from [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension that can input text from speech into any window with an editable text field.
 If you liked Blurt for its power vs simplicity ratio, you will love this. 
 
-**This is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for network [transcription.](https://github.com/QuantiusBenignus/BlahST/#network-transcription)**
+**BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for network [transcription.](https://github.com/QuantiusBenignus/BlahST/#network-transcription)**
 
 The work is, again, done by the *wsi* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
 The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system as described in [Blurt](https://github.com/QuantiusBenignus/blurt/).
