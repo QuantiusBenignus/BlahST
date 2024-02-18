@@ -36,7 +36,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 * Place the scripts **wsi** and **wrsi** in $HOME/.local/bin/
 * Make them executable
   ```
-  cd $HOME/.local/bin; chmod +x w*si
+  cd $HOME/.local/bin; chmod +x wsi wrsi netwrsi
   ```
 * Run once from the command line to let the script(s) check for its dependencies
 * If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory.
