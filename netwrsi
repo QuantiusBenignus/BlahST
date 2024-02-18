@@ -1,0 +1,110 @@
+#!/usr/bin/zsh
+#If you replace the shell above with bash, note also lines 56 to 66
+# Copyright (c) 2024 Quantius Benignus
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#--------------------------------------------------------------------------
+
+# NAME: wsi 
+# PREREQUSITES: 
+#      - whisper.cpp installation (see https://github.com/ggerganov/whisper.cpp) 
+#      - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' command line utilities from your system's repositories.
+#--------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+#USER CONFIGURATION BLOCK. 
+#Please, adjust the variables here to suit your environment:
+#The IP and port number for the whisper.cpp server:.
+whost="127.0.0.1"
+wport="8080"
+# Store temp files in memory for speed and to reduce SSD/HDD "grinding":
+TEMPD='/dev/shm'
+# Hardcoded temp wav file to store the voice memo and get overwritten every time (in RAM):
+ramf="$TEMPD/wfile"
+#Set the number of processing threads for whisper.cpp inference (adjust for your case):
+#NTHR=8
+#It seems that the optimum number of transcribe threads should equal half CPU processing cores:
+NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
+#--------------------------------------------------------------------------
+#END USER CONFIG BLOCK
+
+#X11 or Wayland:
+wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
+
+#CHECK DEPENDENCIES. This block can be commented out once setup confirmed.
+command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
+command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
+#Now let's check if we are in X11 or Wayland and use the right utility:
+if [[ wm == "wayland" ]]; then
+    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
+elif [[ wm == "X11" ]]; then
+    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
+fi
+#END CHECK DEPENDENCIES. The above block can be commented out after successful run.
+#------------------------------------------------------------------------------------
+
+#Hear the complaints of the above tools and do not continue with the sequence:
+set -e
+
+#Check first if there is a whisper.cpp server running
+if [[ "$(curl -s $whost:$wport/)" != "<html>hello</html>" ]]; then
+    echo "The whisper.cpp server seems to be down, please check your connection!";    
+    exit 1
+fi
+#trap "kill -INT -$$" SIGINT
+trap "" SIGINT
+rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 5%  2>/dev/null
+trap - 
+
+str=$(curl -s $whost:$wport/inference \
+    -H "Content-Type: multipart/form-data" \
+    -F file="@$ramf" \
+    -F temperature="0.0" \
+    -F temperature_inc="0.2" \
+    -F response_format="json" | jq -r '.text' )
+
+# Whisper detected non-speech events such as (wind blowing): 
+str="${str/\(*\)}"   
+str="${str/\[*\]}"
+str="${str#$'\n'}"    
+str="${str#$'\n'}"
+#Prefer the power of zsh, but loose full POSIX compliance.
+if [ -n "$ZSH_NAME" ]; then
+    str="${str#*([[:space:]])}"
+    str="${(u)str}"
+elif [ -n "$BASH" ]; then
+    #Running in bash because you changed the shebang on line 1
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+else
+    echo "Unknown shell, assuming bash compliance"
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+fi
+
+#We have a result, now we make a few decisions:
+#If this is somehow run in a text console: 
+if [[ -z "${DISPLAY}" ]] || [[ -z "${DESKTOP_SESSION}" ]] || [[ -z "${XDG_CURRENT_DESKTOP}" ]]; then
+#"Not running in a known graphics environment. You can find the transcribed text in "$ramf".txt" ; exit 1 ;
+    echo $str ; exit 0
+else
+#xsel or wl-copy:
+ case "$wm" in
+    "x11")
+        echo $str | xsel -ib
+        ;;
+    "wayland")
+        echo $str | wl-copy 
+        ;;
+    *)
+        echo $str
+        ;;
+ esac
+fi
