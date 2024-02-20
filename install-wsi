@@ -35,10 +35,27 @@ if ! command -v sox >/dev/null  2>&1; then
     echo "sox is not installed. Please, install sox (e.g. sudo apt install sox...)"; exit  1
 fi
 echo "   OK"
+
+#Now let's check if we are in X11 or Wayland and use the right utility:
+wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
+if [ "$wm" = "wayland" ]; then
+    echo -n "We are on Wayland. Checking for wl-copy..."
+    if ! command -v wl-copy >/dev/null 2>&1; then 
+        echo "   wl-copy is needed for the clipboard. Please, install wl-copy" ; exit 1 
+    fi  
+    echo "   OK"
+elif [ "$wm" = "X11" ]; then
+    echo -n "We are on X11. Checking for xsel..."
+    if ! command -v xsel >/dev/null 2>&1; then 
+        echo "   xsel not installed but is needed for the clipboard. Please, install xsel" ; exit 1 
+    fi  
+    echo "   OK"
+fi
+
 # Ask the user if they have a local whisper.cpp
 echo " "
 echo "You can use a local whisper.cpp installation, or connect to a whisper.cpp server."
-echo "Do you want to use a preinstalled whisper.cpp installation on this machine? [Y/n]: "
+echo "Do you want to use a local whisper.cpp preinstalled on this machine? [Y/n]: "
 read confirm
 confirm="${confirm:-Y}" 
 # Default to 'Y' if no input is provided
