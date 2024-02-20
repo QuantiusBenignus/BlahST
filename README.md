@@ -32,6 +32,12 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 > *DISCLAIMER: Some of the proposed actions, if implemented, will alter how your system works internally (e.g. systemwide temporary file storage and memory management). The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. Suggestions in this section are based on the author's choice and opinion and may not fit the taste or the particular situation of everyone; please, adjust as you like.*
 
 #### "INSTALLATION"
+
+##### USING THE INSTALLATION SCRIPT
+Run the script **install-wsi** from the folder of the cloned repository and follow the prompts.
+
+##### MANUAL INSTALLATION
+
 *(Assuming whisper.cpp is installed and the "main" executable compiled with 'make' in the cloned whisper.cpp repo. See Prerequisites section)*
 * Place the scripts **wsi** and **wrsi** in $HOME/.local/bin/
 * Make them executable
