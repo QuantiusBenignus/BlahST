@@ -18,22 +18,22 @@
 #--------------------------------------------------------------------------
 
 #Check dependencies
-command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
-\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
- 'ln -s /full/path/to/whisper.cpp/main \$HOME/bin/transcribe'" >&2 ; exit 1 ; }
+#command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+#command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+#\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
+# 'ln -s /full/path/to/whisper.cpp/main \$HOME/bin/transcribe'" >&2 ; exit 1 ; }
 #Hear the complaints of the above tools and do not continue with the sequence:
 set -e
 
 #--------------------------------------------------------------------------
 #USER CONFIGURATION BLOCK. 
+#If installation script used, everything should be configured already.
 #Please, adjust the variables here to suit your environment:
-
 # Store temp files in memory for speed and to reduce SSD/HDD "grinding":
 TEMPD='/dev/shm'
 # Default whisper.cpp model file for inference: POINT AT LOCATION OF YOUR WHISPER.CPP MODEL OF CHOICE!
 #model="$HOME/AI/Models/whisper/ggml-tiny.en.bin"
-model="$HOME/AI/Models/whisper/ggml-base.en.bin"
+model=${WHISPER_DMODEL:-"$HOME/AI/Models/whisper/ggml-base.en.bin"}
 # Hardcoded temp wav file to store the voice memo and get overwritten every time (in RAM):
 ramf="$TEMPD/wfile"
 
@@ -44,9 +44,9 @@ NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 #--------------------------------------------------------------------------
 
 # sox will either react on (CTRL-C) to stop recording or wait for silence detection:
-#trap "kill -INT -$$" SIGINT
+trap "" SIGINT
 rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 5%  2>/dev/null
-#trap - 
+trap - 
 str="$(transcribe -t $NTHR -nt -m $model -f $ramf 2>/dev/null)" 
 
 # Whisper detected non-speech events such as (wind blowing): 
