@@ -38,9 +38,9 @@ NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
 
 #CHECK DEPENDENCIES. This block can be commented out once setup confirmed.
-command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
-command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
+#command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+#command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
+#command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
 #Now let's check if we are in X11 or Wayland and use the right utility:
 if [[ wm == "wayland" ]]; then
     command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
