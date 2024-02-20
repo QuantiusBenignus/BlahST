@@ -36,6 +36,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 ##### USING THE INSTALLATION SCRIPT
 Run the script **install-wrsi** from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environemt and set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
 The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `netwrsi`
+Run the scripts (`wsi`,`wrsi` or `netwrsi`) directly from the command line first to verify their proper operation. Later those will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 
 ##### MANUAL INSTALLATION
 
@@ -56,11 +57,10 @@ If transcribe is not in your $PATH, either edit the call to it in **wsi** to inc
 ###### Network transcription
 This would be useful for Linux systems that need speech-to-text functionality but do not have the power to transcribe speech efficiently. 
 Speech is recorded on the local machine and sent over to a running instance of whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network.
-With an isntance of whisper.cpp server running on a LAN, this would still be considered offline speech recognition.
 
 To make this tool work in network transcription mode, one should use (and [setup hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for) the **netwrsi** script (can be set up alongside the other two).
 * **netwrsi** can be found in this repository and should also be placed in $HOME/.local/bin. (also done from the installation script)
-* The IP and port number for the server should be entered in the configuration block of the script.
+* The IP and port number for the server should be entered in the configuration block of `netwrsi`.
 * The `netwrsi` script will check that a running server is present at the specified IP and complain if not found. To properly set up the server, please, look at its [documentation](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server)
 
 Please, run the script from the command line first to check for its dependencies and have them installed.
