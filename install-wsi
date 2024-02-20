@@ -1,0 +1,172 @@
+#!/bin/sh
+
+# Define the directory for the executable scripts
+dir="$HOME/.local/bin"
+echo ""
+echo ">>>>>>>>>>>> BlahST Installation <<<<<<<<<<<<<"
+echo ""
+echo -e "Checking for \$HOME/.local/bin..."
+# Check if the directory exists, if not, create it
+if [ ! -d "$dir" ]; then
+    mkdir -p "$dir"
+    echo "Directory $dir created."
+fi
+
+# Add the directory to the PATH in the current shell
+export PATH="$dir:$PATH"
+echo "Copying the orchestrator scripts to $HOME/.local/bin..."
+# Copy the script files
+chmod +x "wsi" "wrsi" "netwrsi"
+cp -t "$dir" "wsi" "wrsi" "netwrsi"
+#The following is commented because on some systems .profile checks if $HOME/.local/bin exists and adds it to the PATH.
+# # Add the directory to the PATH permanently for Bash
+# if [ -f "$HOME/.profile" ]; then
+#     echo "export PATH=\"$dir:\$PATH\"" >> "$HOME/.profile"
+# fi
+# # Add the directory to the PATH permanently for Zsh
+# if [ -f "$HOME/.zprofile" ]; then
+#    echo "export PATH=\"$dir:\$PATH\"" >> "$HOME/.zprofile"
+# fi
+
+echo "Speech processor scripts copied and made executable. \$PATH updated."
+echo ""
+echo -n "Checking for sox..."
+if ! command -v sox >/dev/null  2>&1; then
+    echo "sox is not installed. Please, install sox (e.g. sudo apt install sox...)"; exit  1
+fi
+echo "   OK"
+# Ask the user if they have a local whisper.cpp
+echo " "
+echo "You can use a local whisper.cpp installation, or connect to a whisper.cpp server."
+echo "Do you want to use a preinstalled whisper.cpp installation on this machine? [Y/n]: "
+read confirm
+confirm="${confirm:-Y}" 
+# Default to 'Y' if no input is provided
+confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]') 
+# Convert to lowercase
+
+if [ "$confirm" = "y" ]; then
+
+# Prompt the user for the whisper.cpp folder path
+echo "Please enter the absolute path to the main and server executables of whsiper.cpp:"
+#e.g. /home/user1/Programming/Github/whisper.cpp
+read whisper_path
+# Remove any trailing slashes from the whisper_path input
+whisper_path="${whisper_path%/}"
+
+# Check if the whisper.cpp folder contains the 'main' executable
+if [ -x "$whisper_path/main" ]; then
+    # Create a symbolic link called "transcribe" in $dir pointing to "main"
+    ln -s "$whisper_path/main" "$dir/transcribe"
+    echo "Symbolic link 'transcribe' created in $dir."
+else
+    echo "The 'main' executable was not found in the specified folder."
+    echo "... please, rerun this and input the correct whisper.cpp location!"
+    exit 1
+fi
+
+# Prompt the user for the path to whisper.cpp models
+echo ""
+echo "Choosing a default whisper.cpp model file..."
+echo "Please enter the path to the whisper.cpp model files"
+#e.g. /home/user1/Programming/Github/whisper.cpp
+read model_path
+# Remove any trailing slashes from the whisper_path input
+model_path="${model_path%/}"
+#oldifs=$IFS
+# List all .bin files in the path and store them in an array
+bin_files=$(find "$model_path" -type f -name "ggml*.bin" -size +60M)
+
+# Check if any .bin files were found
+if [ -z "$bin_files" ]; then
+    echo "No model files found in the specified path. Trying default location..."
+    bin_files=$(find "$whisper_path/models" -type f -name "ggml*.bin" -size +60M)
+    if [ -z "$bin_files" ]; then
+        echo "Giving up. Please, locate the model files and try again!"
+        exit  1
+    fi
+fi
+# Enumerate the .bin files
+echo "Available model files:"
+echo "$bin_files"
+# Prompt user to select a file
+echo -n "Enter the line number of the model file to use by default: "
+read choice
+#if [ "$choice" =~ ^[0-9]+$ ]; then
+#    echo "Invalid input. Please enter a number."
+#    exit   1
+#fi
+cou=$(echo "$bin_files" | wc -l)
+# Check if the choice is valid
+if [ "$choice" -lt 1 ] || [ "$choice" -gt "$cou" ]; then
+    echo $choice
+    echo "Invalid choice. Rerun installation. Exiting..."
+    exit  1
+fi
+
+# Return the chosen file
+model=$(echo "$bin_files" | tr ' ' '\n' | sed -n "${choice}p")
+
+if [ -e "$model" ]; then 
+   echo ""
+   echo "You selected $model as the default. A shell variable WHISPER_DMODEL will be exported."
+   basename=$(printf '%s\n' "${model##*/}")
+else
+   echo "Model selection failed!" ; exit 1
+fi
+# Prompt the user for confirmation with 'Y' as the default answer
+echo ""
+echo "$basename can be placed in /dev/shm (shared RAM) for fast read access."
+echo -n "Do you want to place $basename in /dev/shm/ on each login [Y/n]: "
+read confirmation
+confirmation="${confirmation:-Y}" # Default to 'Y' if no input is provided
+confirmation=$(echo "$confirmation" | tr '[:upper:]' '[:lower:]') # Convert to lowercase
+# Check if the user confirmed the action
+if [ "$confirmation" = "y" ]; then
+        # command to relocate model on login, to be appended to ~/.profile                 
+        reloc="([ -f /dev/shm/$basename ] || cp $model /dev/shm/)"
+        model="/dev/shm/$basename"
+        echo "The model file $basename will be relocated on login and WHISPER_DMODEL will point to it."
+    else
+        reloc="#---------"
+        echo "Relocation of $basename on login skipped."
+    fi
+
+if [ -z "$WHISPER_DMODEL" ]; then
+echo ""
+echo "The file $model will be set as the default with the WHISPER_DMODEL variable in your environment"
+if [ -f "$HOME/.profile" ]; then
+    echo $reloc >> ~/.profile
+    echo "export WHISPER_DMODEL=\"$model\"" >> ~/.profile
+    echo "The variable WHISPER_DMODEL has been exported to ~/.profile"
+elif [ -f "$HOME/.zprofile" ]; then
+    echo $reloc >> ~/.zprofile
+    echo "export WHISPER_DMODEL=\"$model\"" >> ~/.zprofile
+    echo "The variable WHISPER_DMODEL has been exported to ~/.zprofile"
+else
+    echo "Neither ~/.profile nor ~/.zprofile exists. Please manually add WHISPER_DMODEL to your shell configuration."
+fi
+else
+echo " "
+echo "It seems WHISPER_MODEL is already set to <$WHISPER_DMODEL> in your environment"
+echo "If it does not match <$model>, please, set it manually in your .profile file."
+fi
+export WHISPER_DMODEL="$model"
+else
+echo " "
+echo "Will be calling a network instance of whisper.cpp for transcription..."
+echo "Checking for tools needed for network transcription..."
+echo -n "Checking for curl..."
+if ! command -v curl >/dev/null  2>&1; then
+    echo "curl is required. Please, install curl (e.g. 'apt install curl', or 'dnf install curl'...)" ; exit  1
+fi
+echo "   OK"
+echo -n "Checking for jq..."
+if ! command -v jq >/dev/null  2>&1; then
+    echo "jq is required. Please, install jq (e.g. 'apt install jq'...)" ; exit  1
+fi
+echo "   OK"
+echo "As a final step, please, set up the server and adjust its IP and port number in the CONFIGURATION block of netwrsi."
+fi
+
+echo "Installation complete. Run the 'wsi', 'wrsi' or 'netwrsi' script from the command line first to verify correct operation."
