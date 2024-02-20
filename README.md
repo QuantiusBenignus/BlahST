@@ -102,7 +102,7 @@ Now when the script is recording speech, it can be stopped with the new key comb
 * Open the Xfce4 Settings Manager.
 * Navigate to Keyboard → Application Shortcuts.
 * Click on the Add button to create a new shortcut.
-* Enter the name of the shortcut and the command e.g. `pkill --signal 2 rec`.
+* Enter the name of the shortcut and the command e.g. `/home/yourusername/.local/bin/wsi` or `pkill --signal 2 rec`.
 * Press the keys you wish to assign to the shortcut.
 * Click OK to save the shortcut.
  The hotkey to stop speech recording should be done similarly.
@@ -114,7 +114,7 @@ Now when the script is recording speech, it can be stopped with the new key comb
 * Under the newly created group, click on New again and select Global Shortcut -> Command/URL.
 * Give your new shortcut a name.
 * Choose the desired shortcut key combination by clicking on the button next to "None" and pressing the keys you want to assign to the shortcut.
-* In the Trigger tab, specify the command or URL that should be executed when the shortcut is triggered.
+* In the Trigger tab, specify the command to be executed when the shortcut is triggered. e.g. `/home/yourusername/.local/bin/wsi`
 * Ensure that the Enabled checkbox is checked to activate the shortcut.
 * Apply the changes by clicking Apply or OK.
 The hotkey to stop speech recording should be done similarly.
@@ -125,12 +125,11 @@ Please, consult the documentation for your systems desktop environment.
 
 ---
 ##### Summary
-* On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection) , use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
+* On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense here) 
 
-* If using **wrsi** (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard under, either X11 or Wayland.
+* If using **wrsi** (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
 Then pasting it happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual. (For mopst people, right-hand hotkeys would work well.)
 
 * If transcribing over the network with **netwrsi** (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server on a dedicated more capable machine.
-  It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (by default, but it could be configured to use the middle mouse button).
-  
+  It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (by default, but it could be configured to use the middle mouse button).  
