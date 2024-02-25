@@ -22,7 +22,7 @@
 #Please, adjust the variables here to suit your environment:
 #The IP and port number for the whisper.cpp server:.
 whost="127.0.0.1"
-wport="8080"
+wport="58080"
 # Store temp files in memory for speed and to reduce SSD/HDD "grinding":
 TEMPD='/dev/shm'
 # Hardcoded temp wav file to store the voice memo and get overwritten every time (in RAM):
@@ -54,7 +54,7 @@ fi
 set -e
 
 #Check first if there is a whisper.cpp server running
-if [[ "$(curl -s $whost:$wport/)" != "<html>hello</html>" ]]; then
+if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $whost:$wport)" != "200" ]]; then
     echo "The whisper.cpp server seems to be down, please check your connection!";    
     exit 1
 fi
