@@ -2,9 +2,9 @@
 Aside from being useful for Linux systems that do not have the power to transcribe speech efficiently, this mode also shows speedup of local transcription on faster machines which run a whisper.cpp server on localhost. See below.
 
 ### Setup
-Speech is recorded on the local machine and sent over to a running instance of whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network or at localhost.
+Speech is recorded on the local machine and sent via an API call, to a whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network or at localhost (127.0.0.1).
 
-* To make the extension work in network transcription mode, one should use the **netwrsi** script.
+* To make BlahST work in network transcription mode, one should use the **netwrsi** script when setting up keyboard shortcuts for speech input.
 
 * **netwrsi** can be found in this repository and should be placed in $HOME/.local/bin. 
 
