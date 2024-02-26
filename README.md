@@ -59,10 +59,12 @@ If transcribe is not in your $PATH, either edit the call to it in **wsi** to inc
 Inside the **wsi** (or **wrsi**) script, near the begining, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables (described in the following section) have been collected. 
 Most can be left as is but the important one is the location of the whisper.cpp model file that you would like to use during transcription (or the IP and port number for the whisper.cpp server in **netwrsi**)
 
-##### GUI SETUP OF HOTKEYS 
-( to start and stop speech input, for both manual and automatic installation)
-##### CASE 1: GNOME
-###### Hotkey to start recording of speech
+##### GUI SETUP OF HOTKEYS
+To start and stop speech input, for both manual and automatic installation
+<details>
+<summary> CASE 1: GNOME</summary>
+
+##### Hotkey to start recording of speech
 * Open your GNOME system settings and find "Keyboard".
 * Under "Keyboard shortcuts", "View and customize shortcuts"
 * In the new window, scroll down to "Custom Shortcuts" and press it.
@@ -74,7 +76,7 @@ Most can be left as is but the important one is the location of the whisper.cpp 
 The **wsi** (**wrsi**) script has a silence detection filter in the call to sox (rec) and would stop recording (in the best case) on 2 seconds of silence.
 In addition, if one does not want wait or has issues with the silence detection threshold:
 
-###### Manual speech recording interuption
+##### Manual speech recording interuption
 For those who want to be able to interupt the recording manually with a key combination, in the spirit of great hacks, we are going to use the system built-in features:
 * Open your GNOME system settings and find "Keyboard".
 * Under "Keyboard shortcuts", "View and customize shortcuts"
@@ -86,17 +88,25 @@ For those who want to be able to interupt the recording manually with a key comb
   
 That Simple.  Just make sure that the new key binding has not been set-up already for something else.
 Now when the script is recording speech, it can be stopped with the new key combo and transcription will start immediatelly.
+</details>
 
-##### CASE 2: XFCE4
+<details>
+<summary> CASE 2: XFCE4</summary>
+
 * Open the Xfce4 Settings Manager.
 * Navigate to Keyboard → Application Shortcuts.
 * Click on the Add button to create a new shortcut.
-* Enter the name of the shortcut and the command e.g. `/home/yourusername/.local/bin/wsi` or `pkill --signal 2 rec`.
+* Enter the name of the shortcut and the command e.g. `/home/yourusername/.local/bin/wsi`.
 * Press the keys you wish to assign to the shortcut.
 * Click OK to save the shortcut.
- The hotkey to stop speech recording should be done similarly.
- 
-##### CASE 3: KDE (Plasma)
+ The hotkey to stop speech recording should be done similarly with `pkill --signal 2 rec`.
+</details>
+
+<details>
+<summary> 
+CASE 3: KDE (Plasma)
+</summary>
+
 * Open the System Settings application.
 * Navigate to Shortcuts and then Custom Shortcuts.
 * Click on Edit and then New to create a new group for your shortcuts if needed.
@@ -106,19 +116,20 @@ Now when the script is recording speech, it can be stopped with the new key comb
 * In the Trigger tab, specify the command to be executed when the shortcut is triggered. e.g. `/home/yourusername/.local/bin/wsi`
 * Ensure that the Enabled checkbox is checked to activate the shortcut.
 * Apply the changes by clicking Apply or OK.
-The hotkey to stop speech recording should be done similarly.
- 
-Please, note that there may be slight variations in these steps depending on the version installed on your system.
-For many other environements, such as Mate, Cinnamon, LXQt, Deepin, etc. the steps should be somewhat simmilar to the examples above.
+The hotkey to stop speech recording should be done similarly with `pkill --signal 2 rec`. 
+</details>
+
+Please, note that there may be slight variations in the above steps depending on the version installed on your system.
+For many other environements, such as **Mate, Cinnamon, LXQt, Deepin**, etc. the steps should be somewhat simmilar to the examples above.
 Please, consult the documentation for your systems desktop environment.
 
 ---
-##### Summary
+#### Summary
 * On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense here) 
 
-* If using **wrsi** (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
+* If using `wrsi` (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
 Then pasting it happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual. (For mopst people, right-hand hotkeys would work well.)
 
-* If transcribing over the network with **netwrsi** (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server on a dedicated more capable machine.
+* If transcribing over the network with `netwrsi` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
   It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (by default, but it could be configured to use the middle mouse button).  
