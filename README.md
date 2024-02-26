@@ -27,14 +27,14 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 - zsh or bash command line shell installation on a Linux system running GNOME.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN (see network-transcription [section](./API_TRANSCRIBE.md))
 - The orchestrator tool **wsi**,[**wrsi**,**netwrsi**] from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH** (The installation script `install-wrsi` handles most of these).  
-- recent versions of 'sox', 'xsel' or 'wl-copy'  command-line tools from your system's repositories.
+- recent versions of 'sox', 'xsel' (or 'wl-copy' on Wayland) command-line tools from your system's repositories.
 -  A working microphone 
 > *DISCLAIMER: Some of the proposed actions, if implemented, will alter how your system works internally (e.g. systemwide temporary file storage and memory management). The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. Suggestions in this section are based on the author's choice and opinion and may not fit the taste or the particular situation of everyone; please, adjust as you like.*
 
 #### "INSTALLATION"
 <details>
 <summary>USING THE INSTALLATION SCRIPT</summary>
-Run the script **install-wrsi** from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environemt and set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
+Run the script `install-wrsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environemt and set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
 The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `netwrsi`
 Run the scripts (`wsi`,`wrsi` or `netwrsi`) directly from the command line first to verify their proper operation. Later those will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 </details>
