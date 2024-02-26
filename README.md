@@ -4,9 +4,9 @@
 The inspiration for this little tool for Linux came from [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension that can input text from speech into any window with an editable text field.
 If you liked Blurt for its high power and simplicity, you will love this. 
 
-**BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for network [transcription.](https://github.com/QuantiusBenignus/BlahST/#network-transcription)**
+**BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for [network transcription.](./API_TRANSCRIBE.md)**
 
-The work is, again, done by the *wsi* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
+The work is, again, done by the *ws[r]i* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
 The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system as described in [Blurt](https://github.com/QuantiusBenignus/blurt/) or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
 The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp
 
@@ -25,7 +25,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 
 #### PREREQUISITES:
 - zsh or bash command line shell installation on a Linux system running GNOME.   
-- working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN (see network-transcription [section](https://github.com/QuantiusBenignus/BlahST/#network-transcription) below)
+- working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN (see network-transcription [section](./API_TRANSCRIBE.md) below)
 - The orchestrator tool **wsi**,[**wrsi**,**netwrsi**] from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH** (The installation script `install-wrsi` handles most of these).  
 - recent versions of 'sox', 'xsel' or 'wl-copy'  command-line tools from your system's repositories.
 -  A working microphone 
@@ -53,17 +53,6 @@ Run the scripts (`wsi`,`wrsi` or `netwrsi`) directly from the command line first
 ln -s /full/path/to/whisper.cpp/main $HOME/.local/bin/transcribe
 ```
 If transcribe is not in your $PATH, either edit the call to it in **wsi** to include the absolute path, or add its location to the $PATH variable. Otherwise the script will fail.
-
-###### Network transcription
-This would be useful for Linux systems that need speech-to-text functionality but do not have the power to transcribe speech efficiently. 
-Speech is recorded on the local machine and sent over to a running instance of whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network.
-
-To make this tool work in network transcription mode, one should use (and [setup hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for) the **netwrsi** script (can be set up alongside the other two).
-* **netwrsi** can be found in this repository and should also be placed in $HOME/.local/bin. (also done from the installation script)
-* The IP and port number for the server should be entered in the configuration block of `netwrsi`.
-* The `netwrsi` script will check that a running server is present at the specified IP and complain if not found. To properly set up the server, please, look at its [documentation](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server)
-
-Please, run the script from the command line first to check for its dependencies and have them installed.
  
 #### CONFIGURATION
 ##### For manual installation only:
