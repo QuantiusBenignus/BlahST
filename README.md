@@ -34,7 +34,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 #### "INSTALLATION"
 <details>
 <summary>USING THE INSTALLATION SCRIPT</summary>
-Run the script `install-wrsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environemt and set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
+Run the script `install-wrsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment and set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
 The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `netwrsi`
 Run the scripts (`wsi`,`wrsi` or `netwrsi`) directly from the command line first to verify their proper operation. Later those will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 </details>
