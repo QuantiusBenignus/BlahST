@@ -13,9 +13,10 @@ The idea here is to not even write an extension like Blurt. Just use a pair of h
 When speech input is initiated with a hotkey, a microphone indicator icon appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
 The disappearance of the microphone icon from the top bar indicates that the process is completed and `wsi` or `wrsi` has "blurted" a snippet of text that can be pasted from the clipboard. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
 
-If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script (instead of `wsi`), which uses the standard clipboard under X11 and Wayland (not the PRIMARY sellection, pasted with the middle mouse button).
+If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script, which uses the standard clipboard under X11 and Wayland (while `wsi` uses the PRIMARY sellection and text is pasted with the middle mouse button).
 In this case, one can relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
-(One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165))
+(One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165)).
+
 Then pasting happens very fast with the left hand. Here is a demostration video:
 
 https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
