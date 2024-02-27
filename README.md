@@ -5,12 +5,11 @@
 
 The inspiration for this little tool for Linux came from [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension that can input text from speech into any window with an editable text field.
 If you liked Blurt for its high power and simplicity, you will love this. 
-
+### Principle of operation
 The work is, again, done by the *ws[r]i* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
 The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
 The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard.
 
-### Principle of operation
 When speech input is initiated with a hotkey, a microphone indicator icon appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
 The disappearance of the microphone icon from the top bar indicates that the process is completed and `wsi` or `wrsi` has "blurted" a snippet of text that can be pasted from the clipboard. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
 
