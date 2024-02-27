@@ -7,19 +7,18 @@ If you liked Blurt for its high power and simplicity, you will love this.
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for [network transcription.](./API_TRANSCRIBE.md)**
 
 The work is, again, done by the *ws[r]i* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
-The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system as described in [Blurt](https://github.com/QuantiusBenignus/blurt/) or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
-The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp
+The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
+The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard.
 
-When speech input is initiated, a microphone indicator icon appears in the top bar and is shown for the duration of the recording.
-The disappearance of the microphone icon from the top bar indicates that the process is completed and `wsi` or `wrsi` has "blurted" a snippet of text that can be pasted with the middle mouse button. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
+When speech input is initiated with a hotkey, a microphone indicator icon appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
+The disappearance of the microphone icon from the top bar indicates that the process is completed and `wsi` or `wrsi` has "blurted" a snippet of text that can be pasted from the clipboard. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
 
-If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script (instead of `wsi`), which uses the standard clipboard under X11 and Wayland (not the PRIMARY sellection).
-In this case, it is advisable to relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it.
+If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script (instead of `wsi`), which uses the standard clipboard under X11 and Wayland (not the PRIMARY sellection, pasted with the middle mouse button).
+In this case, one can relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
+(One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165))
 Then pasting happens very fast with the left hand. Here is a demostration video:
 
-
 https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
-
 
 ### SYSTEM SETUP
 
