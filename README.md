@@ -9,7 +9,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 
 ### Principle of operation
 The work is done by the *ws[r]i* script, similar to the one in [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension for speech-to-text input.
-The heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
+Speech recognition is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
 The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard.
 
 When speech input is initiated with a hotkey, a microphone indicator appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
@@ -17,6 +17,8 @@ The disappearance of the microphone icon from the top bar indicates completion a
 
 For keyboard-only operation, with the standard `CTRL+V` for example, one can use the `wrsi` script, which uses the standard clipboard under X11 and Wayland (while `wsi` uses the PRIMARY sellection and text is pasted with the middle mouse button). For left-hand paste, speech recording can be relegated to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
 (One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165)).
+
+---
 
 ### SYSTEM SETUP
 
@@ -28,7 +30,7 @@ For keyboard-only operation, with the standard `CTRL+V` for example, one can use
 -  A working microphone 
 > *DISCLAIMER: The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. The proposed actions and automations (e.g. installation locations etc.) are merely suggestions and are based on the author's choice and opinion. As they may not fit the taste or the particular situation of everyone, please, adjust as needed.*
 
-#### "INSTALLATION"
+#### INSTALLATION
 <details>
 <summary>USING THE INSTALLATION SCRIPT</summary>
 Run the script `install-wrsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment and set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
@@ -122,8 +124,7 @@ Please, note that there may be slight variations in the above steps depending on
 For many other environements, such as **Mate, Cinnamon, LXQt, Deepin**, etc. the steps should be somewhat simmilar to the examples above.
 Please, consult the documentation for your systems desktop environment.
 
----
-#### Summary
+#### SUMMARY
 * On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense here) 
 
@@ -132,3 +133,40 @@ Then pasting it happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or
 
 * If transcribing over the network with `netwrsi` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
   It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (by default, but it could be configured to use the middle mouse button).  
+---
+
+<details>
+  <summary>TIPS AND TRICKS</summary>
+Sox is recording in wav format at 16k rate, the only currently accepted by whisper.cpp. This is done in **wsi** with this command:
+`rec -t wav $ramf rate 16k silence 1 0.1 3% 1 2.0 6% `
+It will attempt to stop on silence of 2s with signal level threshold of 6%. A very noisy environment will prevent the detection of silence and the recording (of noise) will continue. This is a problem and a remedy that may not work in all cases is to adjust the duration and silence threshold in the sox filter in the `wsi` script. Of course, one can use the manual interuption method if preferred.
+
+We can't raise the threshold arbitrarily because, if one consistently lowers their voice (fadeout) at the end of speech, it may get cut off if the threshold is high. Lower it in that case to a few %.    
+It is best to try to make the speech distinguishable from noise by amplitude (speak clearly, close to the microphone), while minimizing external noise (sheltered location of the microphone, noise canceling hardware etc.)
+With good speech signal level, the threshold can then be more effective, since SNR (speech-to-noise ratio:-) is effectively increased. 
+
+After the speech is captured, it will be passed to `transcribe` (whisper.cpp) for speech recognition. This will happen faster than real time (especially with a fast CPU or if your whisper.cpp installation uses CUDA). One can adjust the number of processing threads used by adding  `-t n` to the command line parameters of transcribe (please, see whisper.cpp documentation). 
+The script will then parse the text to remove non-speech artifacts, format it and send it to the PRIMARY selection (clipboard) using either X11 or Wayland tools. 
+
+In principle, whisper (whisper.cpp) **is multilingual** and with the correct model file, this extension will "blurt" out UTF-8 text transcribed in the correct language. In the wsi script, the language choice can be made permanent by using `-l LC` in the `transcribe` call, where LC stands for the language code of choice, for example `-l fr` for french. 
+
+##### Temporary directory and files
+Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
+This mount point of type "tmpfs" is created in RAM (let's assume that you have enough, say, at least 8GB) and is made available by the kernel for user-space applications. When the computer is shut down it is automatically wiped out, which is fine since we do not need the intermediate files.
+In fact, for some types of applications (looking at you Electron), it would be beneficial (IMHO) to have the systemwide /tmp mount point also kept in RAM. Moving /tmp to RAM may speed up application startup a bit. A welcome speedup for any Electron app. In its simplest form, this transition is easy, just run:
+
+`echo "tmpfs /tmp tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab`
+and then restart your Linux computer.
+For the aforementioned reasons, especially if HDD is the main storage media, one can also move the ASR model files needed by whisper.cpp in the same location (/dev/shm). These are large files, that can be transferred to this location at the start of a terminal session (or at system startup). This can be done using your `.profile` file by placing something like this in it: 
+```
+([ -f /dev/shm/ggml-base.en.bin ] || cp /path/to/your/local/whisper.cpp/models/ggml* /dev/shm/)
+```
+</details>
+
+---
+
+#### Credits
+* Open AI (for [Whisper](https://github.com/openai/whisper))
+* Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggerganov/whisper.cpp))
+* The **sox** developers (for the venerable "Swiss Army knife of sound processing tools")
+* The creators and maintainers of GNOME and utilities such as **xsel, xclip, wl-copy**, the heaviweight **ffmpeg** and others that make the Linux environment (CLI and GUI) such a powerful paradigm.
