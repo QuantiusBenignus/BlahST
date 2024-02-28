@@ -169,4 +169,4 @@ For the aforementioned reasons, especially if HDD is the main storage media, one
 * Open AI (for [Whisper](https://github.com/openai/whisper))
 * Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggerganov/whisper.cpp))
 * The **sox** developers (for the venerable "Swiss Army knife of sound processing tools")
-* The creators and maintainers of GNOME and utilities such as **xsel, xclip, wl-copy**, the heaviweight **ffmpeg** and others that make the Linux environment (CLI and GUI) such a powerful paradigm.
+* The creators and maintainers of CLI utilities such as **xsel, wl-copy, curl, jq** and others that make the Linux environment (CLI and GUI) such a powerful paradigm.
