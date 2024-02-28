@@ -1,12 +1,14 @@
 # BLAhST
 **Blah** **S**peech-to-**T**ext will let you have a bla(h)st pasting text from speech on Linux, with keyboard shortcuts and whisper.cpp. Fire up your microphone and input text the AI way.
 
-**BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for [network transcription.](./API_TRANSCRIBE.md)**
+**BlahST is probably the leanest and fastest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for [network transcription.](./API_TRANSCRIBE.md)**
 
-The inspiration for this little tool for Linux came from [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension that can input text from speech into any window with an editable text field.
-If you liked Blurt for its high power and simplicity, you will love this. 
+Spoken text input happens very fast. Here is a demostration video:
+
+https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
+
 ### Principle of operation
-The work is, again, done by the *ws[r]i* script, which is a toned-down version of [NoteWhispers](https://github.com/QuantiusBenignus/notewhispers/).
+The work is done by the *ws[r]i* script, similar to the one in [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension for speech-to-text input.
 The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
 The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard.
 
@@ -17,9 +19,6 @@ If one fancies keyboard-only operation and wants to paste with the standard `CTR
 In this case, one can relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
 (One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165)).
 
-Then pasting happens very fast with the left hand. Here is a demostration video:
-
-https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
 
 ### SYSTEM SETUP
 
