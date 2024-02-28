@@ -1,9 +1,9 @@
 # BLAhST
 **Blah** **S**peech-to-**T**ext will let you have a bla(h)st inputing text from speech on Linux, with keyboard shortcuts and whisper.cpp. Fire up your microphone and perform high-quality speech recognition offline.
 
-**BlahST is probably the leanest and fastest Whisper-based speech-to-text input tool for Linux, sitting on top of the lean and mean whisper.cpp. Now with the option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
+**BlahST is probably the leanest and fastest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp. Now with the option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
 
-Because low-resource, optimized command-line tools are used, spoken text input happens very fast. Here is a demostration video:
+Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demostration video:
 
 https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
 
