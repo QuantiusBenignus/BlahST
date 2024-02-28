@@ -9,16 +9,14 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 
 ### Principle of operation
 The work is done by the *ws[r]i* script, similar to the one in [Blurt](https://github.com/QuantiusBenignus/blurt/) - a simple GNOME extension for speech-to-text input.
-The actuall heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
+The heavy lifting is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN.
 The idea here is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard.
 
-When speech input is initiated with a hotkey, a microphone indicator icon appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
-The disappearance of the microphone icon from the top bar indicates that the process is completed and `wsi` or `wrsi` has "blurted" a snippet of text that can be pasted from the clipboard. (Note that on slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to the time needed for transcription. On my computer it is less than 300 ms for an average paragraph of spoken text).
+When speech input is initiated with a hotkey, a microphone indicator appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
+The disappearance of the microphone icon from the top bar indicates completion and the transcribed text can be pasted from the clipboard. On slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to longer transcription time. On my computer, via the whisper.cpp server API, it is less than 150 ms (300 ms with local whisper.cpp) for an average paragraph of spoken text.
 
-If one fancies keyboard-only operation and wants to paste with the standard `CTRL+V` for example, then they can use the `wrsi` script, which uses the standard clipboard under X11 and Wayland (while `wsi` uses the PRIMARY sellection and text is pasted with the middle mouse button).
-In this case, one can relegate the speech recording to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
+For keyboard-only operation, with the standard `CTRL+V` for example, one can use the `wrsi` script, which uses the standard clipboard under X11 and Wayland (while `wsi` uses the PRIMARY sellection and text is pasted with the middle mouse button). For left-hand paste, speech recording can be relegated to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
 (One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165)).
-
 
 ### SYSTEM SETUP
 
