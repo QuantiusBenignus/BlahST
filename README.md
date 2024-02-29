@@ -15,8 +15,7 @@ The idea here is to not even write an extension like Blurt. Just use a pair of h
 When speech input is initiated with a hotkey, a microphone indicator appears in the top bar and is shown for the duration of the recording (can be interupted with another hotkey).
 The disappearance of the microphone icon from the top bar indicates completion and the transcribed text can be pasted from the clipboard. On slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to longer transcription time. On my computer, via the whisper.cpp server API, it is less than 150 ms (300 ms with local whisper.cpp) for an average paragraph of spoken text.
 
-For keyboard-only operation, with the standard `CTRL+V` for example, one can use the `wrsi` script, which uses the standard clipboard under X11 and Wayland (while `wsi` uses the PRIMARY sellection and text is pasted with the middle mouse button). For left-hand paste, speech recording can be relegated to hotkeys triggered with the right hand. For example I have setup the "+" and "Insert" keys on the numeric keypad since I do not use it. 
-(One user cleverly [remaped the CAPS lock key instead](https://github.com/QuantiusBenignus/blurt/issues/5#issuecomment-1966499165)).
+For keyboard-only operation, with the standard `CTRL+V` for example, one can use the `wrsi` script, which uses the standard clipboard under X11 and Wayland (while `wsi` uses the PRIMARY sellection and text is pasted with the middle mouse button). For left-hand paste, speech recording can be relegated to hotkeys triggered with the right hand. For example I have setup the unused "+" and "Insert" keys on the numeric keypad. 
 
 ---
 
@@ -123,6 +122,9 @@ The hotkey to stop speech recording should be done similarly with `pkill --signa
 Please, note that there may be slight variations in the above steps depending on the version installed on your system.
 For many other environements, such as **Mate, Cinnamon, LXQt, Deepin**, etc. the steps should be somewhat simmilar to the examples above.
 Please, consult the documentation for your systems desktop environment.
+#### TO DO
+- [x] POSIX compliant installation script
+- [ ] POSIX compliant orchestration scripts
 
 #### SUMMARY
 * On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
