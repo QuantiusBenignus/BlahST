@@ -14,10 +14,10 @@ fi
 
 # Add the directory to the PATH in the current shell
 export PATH="$dir:$PATH"
-echo "Copying the orchestrator scripts to $HOME/.local/bin..."
+echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi" "wrsi" "netwrsi"
-cp -t "$dir" "wsi" "wrsi" "netwrsi"
+chmod +x "wsi"
+cp -t "$dir" "wsi"
 #The following is commented because on some systems .profile checks if $HOME/.local/bin exists and adds it to the PATH.
 # # Add the directory to the PATH permanently for Bash
 # if [ -f "$HOME/.profile" ]; then
@@ -183,7 +183,7 @@ if ! command -v jq >/dev/null  2>&1; then
     echo "jq is required. Please, install jq (e.g. 'apt install jq'...)" ; exit  1
 fi
 echo "   OK"
-echo "As a final step, please, set up the server and adjust its IP and port number in the CONFIGURATION block of netwrsi."
+echo "As a final step, please, set up the server and adjust its IP and port number in the CONFIGURATION block of wsi."
 fi
 
-echo "Installation complete. Run the 'wsi', 'wrsi' or 'netwrsi' script from the command line first to verify correct operation."
+echo "Installation complete. Run the 'wsi' script from the command line first to verify correct operation."
