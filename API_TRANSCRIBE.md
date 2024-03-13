@@ -4,17 +4,17 @@ Aside from being useful for Linux systems that do not have the power to transcri
 ### Setup
 Speech is recorded on the local machine and sent via an API call, to a whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network or at localhost (127.0.0.1).
 
-* To make BlahST work in network transcription mode, one should use the **netwrsi** script when setting up keyboard shortcuts for speech input.
+* To make BlahST work in network transcription mode, one should use the `wsi` script with `-n` flag when setting up keyboard shortcuts for speech input.
 
-* **netwrsi** can be found in this repository and should be placed in $HOME/.local/bin. 
+* **wsi** can be found in this repository and should be placed in $HOME/.local/bin. 
 
-* The IP and port number for the server should be entered in the configuration block of the script.
+* The IP/hostname and port number for the server should be entered in the configuration block of the script.
 
-* The script will check that a running server is present at the specified IP and complain if not found. To properly set up the server, please, look at its [documentation](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server)
+* The script will check that a running server is present at the specified IP or hostname and complain if not found. To properly set up the server, please, look at its [documentation](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server)
 
 * Please, run the script from the command line first to check for its dependencies and have them installed.
 
-When **netwrsi** is properly set up, BlahST will work the same way as with local instance of whisper.cpp. Likely faster.
+When **wsi** is properly set up, BlahST will work the same way as with local instance of whisper.cpp. Likely faster.
 
 
 ## Signifficant Speedup
@@ -23,7 +23,7 @@ When **netwrsi** is properly set up, BlahST will work the same way as with local
 This expands on a previous observation / [comment](https://github.com/ggerganov/whisper.cpp/discussions/1706#discussioncomment-8559750):
 
 Before, I was getting ~30x-faster-than-realtime transcription with a local whisper.cpp (**main** executable) instance that was loading the model file on each call instead of keeping it loaded in memory.
-Take a look at the transcription speed when a call to a local whisper.cpp **server** instance is made (excluding the time for speech input, the curl call takes the bulk of the time in my tools, so its timing is the bigest contributor to speed of transcription ):
+Take a look at the transcription speed when a call to a local whisper.cpp **server** instance is made (excluding the time for speech input, the curl call (transcription) takes the bulk of the time in my tools, so its timing is the largest contributor to speed of transcription ):
 
 The first screenshot shows that the server instance (on localhost) is processing a 12.5 second speech clip, using 8 threads and assisted by GPU with CUDA:
 
@@ -38,7 +38,7 @@ And the request itself (timed to stderr with curl itself, tcurl is just a shell 
 This is almost **90x-faster-than-real-time** (~140 ms for a 12.5s speech clip). Loading the model takes about 110 ms for the "main" executable, which does not account for this big difference (3 times).
 Seems like there is extra advantage to running a local server with the model preloaded.
 
-Seeing this consistently, I would recommend using this **network** mode of operation with BlahST. 
+Seeing this consistently, I would recommend using this **client - server** mode of operation with BlahST. 
 Just use the netwrsi script, which makes a call to whisper.cpp **server** (server should be compiled along with main in your whisper.cpp repo).
 The server instance must be started on login (on a local machine) or otherwise available on your LAN. 
 
