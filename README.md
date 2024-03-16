@@ -93,6 +93,7 @@ Now when the script is recording speech, it can be stopped with the new key comb
 <details>
 <summary> CASE 2: XFCE4</summary>
 This is simalr to the GNOME setup above (for reference, see its more detailed instructions) 
+  
 * Open the Xfce4 Settings Manager.
 * Navigate to Keyboard → Application Shortcuts.
 * Click on the Add button to create a new shortcut.
@@ -107,6 +108,7 @@ This is simalr to the GNOME setup above (for reference, see its more detailed in
 CASE 3: KDE (Plasma)
 </summary>
 This is similar to the GNOME setup above (for reference, see its more detailed instructions)
+  
 * Open the System Settings application.
 * Navigate to Shortcuts and then Custom Shortcuts.
 * Click on Edit and then New to create a new group for your shortcuts if needed.
