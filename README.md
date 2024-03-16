@@ -122,7 +122,7 @@ The hotkey to stop speech recording should be done similarly with `pkill --signa
 </details>
 
 Please, note that there may be slight variations in the above steps depending on the version installed on your system.
-For many other environements, such as **Mate, Cinnamon, LXQt, Deepin**, etc. the steps should be somewhat simmilar to the examples above.
+For many other environements, such as **Mate, Cinnamon, LXQt, Deepin**, etc. the steps should be somewhat similar to the examples above.
 Please, consult the documentation for your systems desktop environment.
 #### TO DO
 - [x] POSIX compliant installation script
