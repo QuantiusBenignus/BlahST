@@ -39,7 +39,7 @@ This is almost **90x-faster-than-real-time** (~140 ms for a 12.5s speech clip). 
 Seems like there is extra advantage to running a local server with the model preloaded.
 
 Seeing this consistently, I would recommend using this **client - server** mode of operation with BlahST. 
-Just use the wsi script with `-n` flag (or supply a custom ip:port or hostname:port pair as the first argument), which makes a call to whisper.cpp **server** (server should be compiled along with main in your whisper.cpp repo).
+Just use the `wsi` script with `-n` flag (or supply a custom `ip:port` or `hostname:port` pair as the first argument), which makes a call to whisper.cpp **server** (server should be compiled along with main in your whisper.cpp repo).
 The server instance must be started on login (on a local machine) or otherwise available on your LAN. 
 
 ##### Caveats:
