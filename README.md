@@ -144,7 +144,8 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 * If transcribing over the network with `wsi -n -c` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
   It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (to paste with the middle mouse button use `wsi -n` instead).
   
-* For multilinuag users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`.  
+* For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle asign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
+
 ---
 
 <details>
@@ -160,7 +161,7 @@ With good speech signal level, the threshold can then be more effective, since S
 After the speech is captured, it will be passed to `transcribe` (whisper.cpp) for speech recognition. This will happen faster than real time (especially with a fast CPU or if your whisper.cpp installation uses CUDA). One can adjust the number of processing threads used by adding  `-t n` to the command line parameters of transcribe (please, see whisper.cpp documentation). 
 The script will then parse the text to remove non-speech artifacts, format it and send it to the PRIMARY selection (clipboard) using either X11 or Wayland tools. 
 
-In principle, whisper (whisper.cpp) **is multilingual** and with the correct model file, this extension will "blurt" out UTF-8 text transcribed in the correct language. In the wsi script, the language choice can be made permanent by using `-l LC` in the `transcribe` call, where LC stands for the language code of choice, for example `-l fr` for french. 
+In principle, whisper (whisper.cpp) **is multilingual** and with the correct model file, this extension will "blurt" out UTF-8 text transcribed in the correct language. The `wsiml` script is dedicated to multi-lingual use and with it the user is able to choose the language for speech input (using the `-l LC` flag where LC is the language code) and can also translate the speech in the chosen input language to English with the `-t` flag. The user can in principle asign multiple hotkeys to the various languages that they want to transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
 ##### Temporary directory and files
 Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
