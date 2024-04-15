@@ -156,8 +156,8 @@ lang="en"
 #    Welsh:
 #lang="cy"
 # Default whisper.cpp model file for inference (Use at least ggml-small for good non-english performance):
-#model="$TEMPD/ggml-small.bin"
-model="$HOME/CHANGE_PATH_TO/WHISPER_CPP/MODELS/HERE/ggml-small.bin"
+#model="$TEMPD/ggml-small.bin
+model=${WHISPER_DMODEL:-"$HOME/CHANGE_PATH_TO/WHISPER_CPP/MODELS/HERE/ggml-small.bin"}
 #---END USER CONFIG BLOCK------------------------------------------------------------------------
 
 #---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
