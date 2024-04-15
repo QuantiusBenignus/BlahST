@@ -4,7 +4,7 @@
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp.** 
 
 - **Now with the option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
-- **Now able to select language and translate from the command line with the dedicated `wsiml` script"**
+- **Now able to select language and translate from the command line with the dedicated `wsiml` script**
 
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demostration video:
 
