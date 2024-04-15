@@ -1,0 +1,313 @@
+#!/usr/bin/zsh
+#If you replace the shell above with bash, note also lines 121 to 124
+# Copyright (c) 2024 Quantius Benignus
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#--------------------------------------------------------------------------
+
+# NAME: wsiml (Multi-lingual version of wsi) 
+# PREREQUSITES: 
+#  - whisper.cpp 'main' AND/OR 'server' installation (see https://github.com/ggerganov/whisper.cpp) 
+#  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools from your system's repositories.
+#--------------------------------------------------------------------------
+#Use those timestamps for timing your app/server performance:
+#echo $(date +%s.%N)
+
+#X11 or Wayland (2nd line may catch edge cases):
+wm="$XDG_SESSION_TYPE"
+#wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
+
+#---USER CONFIGURATION BLOCK----------------------------------------------------------------------
+#Please, adjust the variables here to suit your environment:
+# Store temp files in memory for speed and to reduce SSD/HDD "grinding":
+TEMPD='/dev/shm'
+# Hardcoded temp wav file to store the voice memo and get overwritten every time (in RAM):
+ramf="$TEMPD/wfile"
+#Set the number of processing threads for whisper.cpp inference (adjust for your case):
+NTHR=8
+#It seems that the optimum number of transcribe threads should equal half CPU processing cores:
+#NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
+# Use PRIMARY selection (middle mouse button to paste) unless CLIPBOARD selected from GUI: 
+CLIPBOARD=false
+#Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
+#(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
+WHOST="127.0.0.1"
+WPORT="58080"             
+# Choose a default language for speech input (only those with WER > 50%):
+#lang="auto"
+#    Afrikaans:
+#lang="af"
+#    Arabic:
+#lang="ar"
+#    Armenian:
+#lang="hy"
+#    Azerbaijani:
+#lang="az"
+#    Belarusian:
+#lang="be"
+#    Bosnian:
+#lang="bs"
+#    Bulgarian:
+#lang="bg"
+#    Catalan:
+#lang="ca"
+#    Chinese:
+#lang="zh"
+#    Croatian:
+#lang="hr"
+#    Czech:
+#lang="cs"
+#    Danish:
+#lang="da"
+#    Dutch:
+#lang="nl"
+#    English:
+lang="en"
+#    Estonian:
+#lang="et"
+#    Finnish:
+#lang="fi"
+#    French:
+#lang="fr"
+#    Galician:
+#lang="gl"
+#    German:
+#lang="de"
+#    Greek:
+#lang="el"
+#    Hebrew:
+#lang="he"
+#    Hindi:
+#lang="hi"
+#    Hungarian:
+#lang="hu"
+#    Icelandic:
+#lang="is"
+#    Indonesian:
+#lang="id"
+#    Italian:
+#lang="it"
+#    Japanese:
+#lang="ja"
+#    Kannada:
+#lang="kn"
+#    Kazakh:
+#lang="kk"
+#    Korean:
+#lang="ko"
+#    Latvian:
+#lang="lv"
+#    Lithuanian:
+#lang="lt"
+#    Macedonian:
+#lang="mk"
+#    Malay:
+#lang="ms"
+#    Maori:
+#lang="mi"
+#    Marathi:
+#lang="mr"
+#    Nepali:
+#lang="ne"
+#    Norwegian:
+#lang="no"
+#    Persian:
+#lang="fa"
+#    Polish:
+#lang="pl"
+#    Portuguese:
+#lang="pt"
+#    Romanian:
+#lang="ro"
+#    Russian:
+#lang="ru"
+#    Serbian:
+#lang="sr"
+#    Slovak:
+#lang="sk"
+#    Slovenian:
+#lang="sl"
+#    Spanish:
+#lang="es"
+#    Swahili:
+#lang="sw"
+#    Swedish:
+#lang="sv"
+#    Tagalog:
+#lang="tl"
+#    Tamil:
+#lang="ta"
+#    Thai:
+#lang="th"
+#    Turkish:
+#lang="tr"
+#    Ukrainian:
+#lang="uk"
+#    Urdu:
+#lang="ur"
+#    Vietnamese:
+#lang="vi"
+#    Welsh:
+#lang="cy"
+# Default whisper.cpp model file for inference (Use at least ggml-small for good non-english performance):
+#model="$TEMPD/ggml-small.bin"
+model="$HOME/CHANGE_PATH_TO/WHISPER_CPP/MODELS/HERE/ggml-small.bin"
+#---END USER CONFIG BLOCK------------------------------------------------------------------------
+
+#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
+command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
+#The next is only needed if curl requests json output from the whisper.cpp server;
+#command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
+command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
+ 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
+#Now let's check if we are in X11 or Wayland and use the right utility:
+if [[ wm == "wayland" ]]; then
+    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
+elif [[ wm == "X11" ]]; then
+    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
+fi
+#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
+
+#Hear the complaints of the above tools and do not continue with the sequence:
+set -e
+
+# Process command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--clipboard)
+            CLIPBOARD=true
+            shift
+            ;;
+        -t|--translate)
+            TRANSLATING="true"
+            shift
+            ;;
+        -l|--language)
+            shift
+            lang=$1
+            shift
+            ;;
+        -n|--netapi)
+            #This uses the hostname or IP and port specified in the config block
+            #Can be overwritten when a command line argument IP:PORT is supplied
+            IPnPORT="$WHOST:$WPORT" 
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                echo "Can't connect to whisper.cpp server at provided address!" >&2   
+                exit 1
+            fi
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [-c|--clipboard]"
+            echo "  -c, --clipboard: Use clipboard instead of PRIMARY selection"
+            echo "  -l, --language: Choose an input language (different than the default)"
+            echo "  -n, --netapi: Use whisper.cpp server with the host:port in the GONFIG block"
+            echo "  -t, --translate: Translate to english (default is no translation)"
+            echo "Any other command line flag is expected to come after and be a valid whisper.cpp flag/argument and will be passed to it as is."
+            echo "For example: 'wsiml -l pl -t --best-of 7' is a valid call to wsiml"
+            exit 0
+            ;;
+        *)
+            #Anything else is passed along to whisper.cpp, so use the above flags first and know what you are doing:
+            break
+            ;;
+    esac
+done
+
+# Store the remaining arguments in a variable
+rem_args=("$@")
+
+#echo "Recording now: "$(date +%s.%N)
+
+rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 5%  2>/dev/null
+
+#echo "Sending now: "$(date +%s.%N)
+if [ -n "$IPnPORT" ]; then 
+# This is switching the models on the fly, but takes time, moving to sepparate apps for 'en' and 'multilingual'. 
+#    if [ "$lang" != "en" ]; then
+#        str=$(curl -S -s $IPnPORT/load \
+#        -H "Content-Type: multipart/form-data" \
+#        -F model="$TEMPD/ggml-small.bin")
+#        echo $str
+#        multi=1
+#    else
+#        if [ multi = 1 ]; then
+#            str=$(curl -S -s $IPnPORT/load \
+#            -H "Content-Type: multipart/form-data" \
+#            -F model="$TEMPD/ggml-base.en.bin")
+#            echo $str
+#            multi=0
+#        fi           
+#    fi
+#In principle, this request can be built up to handle most of the whisper parameters, but for now, only language and translation:
+    str=$(curl -S -s $IPnPORT/inference \
+        -H "Content-Type: multipart/form-data" \
+        -F file="@$ramf" \
+        -F language="$lang" \
+        -F translate="${TRANSLATING:-false}" \
+        -F temperature="0.0" \
+        -F temperature_inc="0.2" \
+        -F response_format="text")
+# | jq -r '.text' )
+else
+    str="$(transcribe -t $NTHR -nt -m $model -f $ramf -l $lang ${TRANSLATING:+-tr} ${rem_args[@]} 2>/dev/null)" 
+fi
+#echo "$TRANSLATING from $lang"
+#echo "Got text now: "$(date +%s.%N)
+
+# Whisper detected non-speech events such as (wind blowing): 
+str="${str/\(*\)}"   
+str="${str/\[*\]}"
+str="${str#$'\n'}"    
+str="${str#$'\n'}"
+#Prefer the power of zsh, but loose full POSIX compliance.
+if [ -n "$ZSH_NAME" ]; then
+    str="${str#*([[:space:]])}"
+    str="${(u)str}"
+elif [ -n "$BASH" ]; then
+    #Running in bash because you changed the shebang on line 1
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+else
+    echo "Unknown shell, assuming bash compliance"
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+fi
+
+#We have a result, now we make a few decisions:
+#If this is somehow run in a text console: 
+if [[ -z "${DISPLAY}" ]] || [[ -z "${DESKTOP_SESSION}" ]] || [[ -z "${XDG_CURRENT_DESKTOP}" ]]; then
+#"Not running in a known graphics environment. Using standard output:
+    echo $str ; exit 0
+else
+#xsel or wl-copy:
+ case "$wm" in
+    "x11")
+        if [ "$CLIPBOARD" = true ]; then
+          echo $str | xsel -ib
+        else
+          echo $str | xsel -ip
+        fi
+        ;;
+    "wayland")
+        if [ "$CLIPBOARD" = true ]; then
+          echo $str | wl-copy
+        else
+          echo $str | wl-copy -p
+        fi 
+        ;;
+    *)
+        echo $str
+        ;;
+ esac
+fi
+
+#echo "Text processed and in clipboard now: "$(date +%s.%N)
