@@ -4,18 +4,18 @@ Aside from being useful for Linux systems that do not have the power to transcri
 ### Setup
 Speech is recorded on the local machine and sent via an API call, to a whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network or at localhost (127.0.0.1).
 
-* To make BlahST work in network transcription mode, one should use the `wsi` script with `-n` flag when setting up keyboard shortcuts for speech input.
+* To make BlahST work in network transcription mode, one should use the `wsi` or `wsiml` script with `-n` flag when setting up keyboard shortcuts for speech input.
 
-* **wsi** can be found in this repository and should be placed in $HOME/.local/bin. 
+* **wsi** and **wsiml** can be found in this repository and should be placed in $HOME/.local/bin. 
 
 * The IP/hostname and port number for the server should be entered in the configuration block of the script.
 
 * The script will check that a running server is present at the specified IP or hostname and complain if not found. To properly set up the server, please, look at its [documentation](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server)
 
-* Please, run the script from the command line first to check for its dependencies and have them installed.
+* Please, run the script of choice from the command line first to check for its dependencies and have them installed.
 
-When **wsi** is properly set up, BlahST will work the same way as with local instance of whisper.cpp. Likely faster.
-
+When **wsi** or **wsiml** is properly set up, BlahST will work the same way as with local instance of whisper.cpp. Likely faster.
+Just keep in mind that for speech input in multiple languages and the ability to translate (use **wsiml**) the server will need to run with a multilingual model file (no .en in the filename), at least ggml-small.bin is recommended for adequate results.
 
 ## Signifficant Speedup
 ### ... when running a local whisper.cpp server (on the same machine or LAN) versus using main executable
