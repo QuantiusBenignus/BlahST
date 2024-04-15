@@ -144,7 +144,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 * If transcribing over the network with `wsi -n -c` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
   It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (to paste with the middle mouse button use `wsi -n` instead).
   
-* For multilinuag users, in addition to the features of `wsi`, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`.  
+* For multilinuag users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`.  
 ---
 
 <details>
