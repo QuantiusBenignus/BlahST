@@ -16,8 +16,8 @@ fi
 export PATH="$dir:$PATH"
 echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi"
-cp -t "$dir" "wsi"
+chmod +x "wsi" "wsiml"
+cp -t "$dir" "wsi" "wsiml"
 #The following is commented because on some systems .profile checks if $HOME/.local/bin exists and adds it to the PATH.
 # # Add the directory to the PATH permanently for Bash
 # if [ -f "$HOME/.profile" ]; then
@@ -107,6 +107,7 @@ fi
 echo "Available model files:"
 echo "$bin_files"
 # Prompt user to select a file
+echo -n "Choose a model file. At least ggml-small.bin recommended for multilingual use"
 echo -n "Enter the line number of the model file to use by default: "
 read choice
 #if [ "$choice" =~ ^[0-9]+$ ]; then
@@ -178,12 +179,12 @@ if ! command -v curl >/dev/null  2>&1; then
     echo "curl is required. Please, install curl (e.g. 'apt install curl', or 'dnf install curl'...)" ; exit  1
 fi
 echo "   OK"
-echo -n "Checking for jq..."
-if ! command -v jq >/dev/null  2>&1; then
-    echo "jq is required. Please, install jq (e.g. 'apt install jq'...)" ; exit  1
-fi
-echo "   OK"
-echo "As a final step, please, set up the server and adjust its IP and port number in the CONFIGURATION block of wsi."
+#echo -n "Checking for jq..."
+#if ! command -v jq >/dev/null  2>&1; then
+#    echo "jq is required. Please, install jq (e.g. 'apt install jq'...)" ; exit  1
+#fi
+#echo "   OK"
+echo "As a final step, please, set up the server and adjust its IP and port number in the CONFIGURATION block of wsi and/or wsiml."
 fi
 
-echo "Installation complete. Run the 'wsi' script from the command line first to verify correct operation."
+echo "Installation complete. Run the 'wsi' and/or 'wsiml' scripts from the command line first to verify correct operation."
