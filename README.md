@@ -33,6 +33,12 @@ For keyboard-only operation, with the standard `CTRL+V` for example, the standar
 > *DISCLAIMER: The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. The proposed actions and automations (e.g. installation locations etc.) are merely suggestions and are based on the author's choice and opinion. As they may not fit the taste or the particular situation of everyone, please, adjust as needed.*
 
 #### INSTALLATION
+In a folder of your choice, clone the BlahST repository and then choose an installation method from below:
+
+```
+git clone https://github.com/QuantiusBenignus/BlahST.git
+```
+
 <details>
 <summary>USING THE INSTALLATION SCRIPT</summary>
 Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the script and make it executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc.
