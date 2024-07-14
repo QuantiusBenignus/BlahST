@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     XFlush(display);
 
     if (XCloseDisplay(display) != 0) {
-        perror("Failed to close display: %s\n");
+        perror("Failed to close display!\n");
         return 1;
     }
     
