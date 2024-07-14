@@ -36,6 +36,9 @@ NTHR=8
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 # Use PRIMARY selection (middle mouse button to paste) unless CLIPBOARD selected: 
 CLIPBOARD=false
+# (For the next one need to compile blahste.c, supplied, works only on X11 for now).
+# Change to 'true' to paste automatically on completed transcription (using 'blahste'):
+AUTOPASTE=false
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
 #(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
 WHOST="127.0.0.1"
@@ -143,8 +146,10 @@ else
     "x11")
         if [ "$CLIPBOARD" = true ]; then
           echo $str | xsel -ib
+          if [ "$AUTOPASTE" = true ]; then blahste; fi
         else
           echo $str | xsel -ip
+          if [ "$AUTOPASTE" = true ]; then blahste -p; fi
         fi
         ;;
     "wayland")
