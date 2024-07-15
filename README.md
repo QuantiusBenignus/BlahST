@@ -5,6 +5,7 @@
 
 - **Now with the option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
 - **Now able to select language and translate from the command line with the dedicated `wsiml` script**
+- **New: [Setup for X11 users to paste transcribed text automatically](https://github.com/QuantiusBenignus/BlahST#summary)**
 
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demostration video:
 
@@ -152,7 +153,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
   
 * For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle assign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
-* **New:** X11 users can compile the supplied program 'blahste.c' that can be called in the 'wsi' script to immediatelly paste the transcribed text in the currently active window, (no need to press CTRL+V or click middle mouse button.) 
+* **New:** X11 users can compile the supplied program 'blahste.c' that can be called in the 'wsi' script to immediatelly paste the transcribed text in the currently active window, (no need to press CTRL+V or click middle mouse button.) Set variable `AUTOPASTE=true` in user config block of wsi. 
 Please, note that if the Clipboard is used, the text will be autopasted under the keyboard carret, while with the PRIMARY selection, a middle mouse button click will be simulated and the text pasted at the position of the mouse pointer.
 Check the source code for compilation instructions and dependencies. Please, note that this simple code may not work across all keyboard layouts. In some edge cases, adjustments may be needed to the key codes.
 
