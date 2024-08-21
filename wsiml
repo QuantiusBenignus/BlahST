@@ -35,6 +35,8 @@ NTHR=8
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 # Use PRIMARY selection (middle mouse button to paste) unless CLIPBOARD selected from GUI: 
 CLIPBOARD=false
+# Use available whisperfile
+WHISPERFILE=whisper-tiny.en.llamafile 
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
 #(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
 WHOST="127.0.0.1"
@@ -186,6 +188,10 @@ while [ $# -gt 0 ]; do
             CLIPBOARD=true
             shift
             ;;
+        -w|--whisperfile)
+            whf="$WHISPERFILE"
+            shift
+            ;;
         -t|--translate)
             TRANSLATING="true"
             shift
@@ -257,6 +263,9 @@ if [ -n "$IPnPORT" ]; then
         -F temperature_inc="0.2" \
         -F response_format="text")
 # | jq -r '.text' )
+elif [[ "$whf" == *.llamafile ]]; then
+    echo "Using whisperfile: "
+    str="$($whf -t $NTHR -nt -f $ramf -l $lang ${TRANSLATING:+-tr} ${rem_args[@]} 2>/dev/null)"     
 else
     str="$(transcribe -t $NTHR -nt -m $model -f $ramf -l $lang ${TRANSLATING:+-tr} ${rem_args[@]} 2>/dev/null)" 
 fi
