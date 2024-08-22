@@ -183,6 +183,8 @@ The script will then parse the text to remove non-speech artifacts, format it an
 
 In principle, whisper (whisper.cpp) **is multilingual** and with the correct model file, this application will output UTF-8 text transcribed in the correct language. The `wsiml` script is dedicated to multi-lingual use and with it the user is able to choose the language for speech input (using the `-l LC` flag where LC is the language code) and can also translate the speech in the chosen input language to English with the `-t` flag. The user can assign multiple hotkeys to the various languages that they want to transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
+Please, note that when using the server mode, now you have 2 choices. You can have either the precompiled whisper.cpp server or the downloaded whisperfile (in server mode) listen at the preconfigured host and port number. The orchestrator script approaches them the same way.  
+
 ##### Temporary directory and files
 Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
 This mount point of type "tmpfs" is created in RAM (let's assume that you have enough, say, at least 8GB) and is made available by the kernel for user-space applications. When the computer is shut down it is automatically wiped out, which is fine since we do not need the intermediate files.
@@ -201,5 +203,6 @@ For the aforementioned reasons, especially if HDD is the main storage media, one
 #### Credits
 * Open AI (for [Whisper](https://github.com/openai/whisper))
 * Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggerganov/whisper.cpp))
+* Justine Tunney, CJ Pais and the llamafile community (for llamafile and whisperfile)
 * The **sox** developers (for the venerable "Swiss Army knife of sound processing tools")
 * The creators and maintainers of CLI utilities such as **xsel, wl-copy, curl, jq** and others that make the Linux environment (CLI and GUI) such a powerful paradigm.
