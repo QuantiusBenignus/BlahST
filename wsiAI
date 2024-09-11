@@ -1,0 +1,240 @@
+#!/usr/bin/zsh
+#You can replace the shell above with bash, some effort is made to support both shells.
+# Copyright (c) 2024 Quantius Benignus
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#--------------------------------------------------------------------------
+
+# NAME: wsi 
+# PREREQUSITES: 
+#  - whisper.cpp installation (see https://github.com/ggerganov/whisper.cpp) or a whisperfile
+#  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools from your system's repositories.
+#  - optional llama.cpp or llamafile (and models) for AI assistant/translator functionality.
+#  - Piper neural text-to-speech engine for spoken AI assistant response 
+#--------------------------------------------------------------------------
+#X11 or Wayland (2nd line may catch edge cases):
+wm="$XDG_SESSION_TYPE"
+#wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
+
+#---USER CONFIGURATION BLOCK----------------------------------------------------------------------
+#Please, adjust the variables here to suit your environment:
+# Store temp files in memory for speed and to reduce SSD/HDD "grinding":
+TEMPD='/dev/shm'
+# Hardcoded temp wav file to store the speech audio and get overwritten every time (in RAM):
+ramf="$TEMPD/wfile"
+#Set the number of processing threads for whisper.cpp inference (adjust for your case):
+NTHR=8
+#It seems that the optimum number of transcribe threads should equal half CPU processing cores:
+#NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
+# Use PRIMARY selection (middle mouse button to paste) unless CLIPBOARD set to true: 
+CLIPBOARD=false
+# Default whisper.cpp model file for ASR inference (base.en provides excellent WER for English only)
+WMODEL="$TEMPD/ggml-base.en.bin"
+# Use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
+WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
+#Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
+LLMODEL="$HOME/AI/Models/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
+#Use the following LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
+LIGHTLMODEL="$HOME/AI/Models/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
+#Default llama.cpp executable:
+llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
+#Uncomment the following to use a LLM from a llammafile instead of standalone llamma.cpp:
+#LLAMAFILE="$HOME/AI/Models/gemma-2-2b-it.Q6_K.llamafile"
+LLAMAFILE="llamafile-0.8.13" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.8.13
+#Use the following text-to-speech Piper model for human-like audio response in English:
+TTSMODEL="$HOME/AI/Models/piper/en_US-lessac-low.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
+#The above TTS model has sample rate 16000 (if you change it, adjust the sample rate below):
+rtts="16000" 
+#Use the following text-to-speech Piper model for human-like audio response in the language (e.g. chinese) of the LLM translator function:
+TRANSMODEL="$HOME/AI/Models/piper/zh_CN-huayan-medium.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
+#The above model has sample rate 22050 (if you change it, adjust the sample rate below):
+rtrans="22050" 
+# Try to paste automatically on completed transcription (EXPERIMENTAL):
+AUTOPASTE=false
+#Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
+#(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
+WHOST="127.0.0.1"
+WPORT="58080"             
+#---END USER CONFIG BLOCK------------------------------------------------------------------------
+
+#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
+command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
+#The next is only needed if curl requests json output from the whisper.cpp server;
+#command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
+command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+\nor download a whisperfile portable executable w model inside (see https://huggingface.co/Mozilla/whisperfile/tree/main)\
+\nand create 'transcribe' in your PATH as a symbolic link to the chosen executable, e.g.\n \
+# 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
+command -v llam &>/dev/null || { echo -e "For interaction with an AI, install llama.cpp (see https://github.com/ggerganov/llama.cpp)\
+\nor download a llamafile portable executable (see https://huggingface.co/Mozilla)\
+\nand create in your PATH a symbolic link to the llama-cli executable, e.g.\n \
+ 'ln -s /full/path/to/llama.cpp/llama-cli \$HOME/.local/bin/llam'" >&2 ; exit 1 ; }
+command -v piper &>/dev/null || { echo -e "Please, install piper text-to-speech (see https://github.com/rhasspi/piper)\
+\nto use the AI assistant and translator features with human-like voice response." >&2 ; exit 1 ; }
+#Now let's check if we are in X11 or Wayland and use the right utility:
+if [[ wm == "wayland" ]]; then
+    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
+elif [[ wm == "X11" ]]; then
+    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
+fi
+echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n"
+#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
+
+#Hear the complaints of the above tools and do not continue with the sequence:
+set -e
+
+# Process command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--clipboard)
+            CLIPBOARD=true
+            shift
+            ;;
+        -w|--whisperfile)
+            whf="$WHISPERFILE"
+            shift
+            ;;
+        -a|--llamafile)
+            llamf="$LLAMAFILE --cli"
+            shift
+            ;;
+        -n|--netapi)
+            #This uses the hostname or IP and port specified in the config block
+            #Can be overwritten, supplied as command line argument IP:PORT instead of this option
+            IPnPORT="$WHOST:$WPORT" 
+            #if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+            #    echo "Can't connect to whisper.cpp server at provided address!" >&2   
+            #    exit 1
+            #fi
+            shift
+            ;;
+        -h|--help)
+            echo -e "Usage: $0 [-c|--clipboard] [-n|--netapi] [-w|--whisperfile] [-l|--llamafile]\n"
+            echo -e "  -c, --clipboard: Use clipboard instead of PRIMARY selection\n"
+            echo -e "  -n, --netapi: Use whisper.cpp server with the host:port in the script's GONFIG block\n"
+            echo -e "  -w, --whisperfile: Use whisperfile instead of standalone whisper.cpp. Note that the whisperfile will use the script-configured (not embedded) model.\n"
+            echo -e "  -a, --llamafile: Use llamafile instead of standalone llama.cpp. Note that the llamafile will use the script-configured (not embedded) LLM model.\n"
+            echo -e "Any other non-flag command-line argument is expected to be an <IP:port> pair. Error will occur if diferent."
+            exit 0
+            ;;
+        *)
+            #The network address and port should have already been sanitized
+            IPnPORT=$1
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                echo "Can't connect to a whisper.cpp server at provided address!" >&2   
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
+#echo "Recording now: "
+rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 3% channels 1 2>/dev/null
+
+#Time stamps for timing the performance of the various stages (Un/Comment as needed): 
+#stmp=$(date +%s%N)
+
+if [ -n "$IPnPORT" ] && [ $(pidof whserver) ]; then 
+    echo "Sending to server now: "
+    str=$(curl -S -s $IPnPORT/inference \
+        -H "Content-Type: multipart/form-data" \
+        -F file="@$ramf" \
+        -F temperature="0.0" \
+        -F temperature_inc="0.2" \
+        -F response_format="text")
+elif [[ "$whf" == *.llamafile ]]; then
+    echo "Using $whf:"
+    str="$($whf -t $NTHR -nt --gpu auto -f $ramf 2>/dev/null)"     
+else
+    #Also the default fallback if the whisper server is offline, wsi -n will end up here.
+    echo "Transcribing now: "
+    str="$(transcribe -t $NTHR -nt -fa -m $WMODEL -f $ramf 2>/dev/null)" 
+fi
+
+#echo "Got text back after: "$((($(date +%s%N) - stmp)/1000000))" ms" 
+#stmp=$(date +%s%N)
+
+#Please, note, that if you have disabled extended globbing for some reason, you likely know how to enable it only for this script. 
+# Whisper detected non-speech events such as (wind blowing): 
+str="${str/\(*\)}"   
+str="${str/\[*\]}"
+str="${str#$'\n'}"    
+str="${str#$'\n'}"
+#Prefer the power of zsh, but loose full POSIX compliance.
+if [ -n "$ZSH_NAME" ]; then
+   str="${str#*([[:space:]])}"
+   str="${(u)str}"
+  #Are we engaging with a LLM via a 'wake' word?
+   if [[ "$str" == "Assistant"*  ]]; then
+     str="${str#?[Aa]ssistant[,.] }"
+     str="${(u)str}"
+     $llamf -t $NTHR -c 2048 --temp 0 -ngl 999 --no-display-prompt -n 150 -m $LIGHTLMODEL --prompt "Provide a very concise response to the following: $str" 2>/dev/null | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
+   elif [[ "$str" == "Translator"*  ]]; then
+     str="${str#?[Tt]ranslator[,.] }"
+     echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 2048 --temp 0 -ngl 999 -n 80 -m $LLMODEL --no-display-prompt --prompt "Respond in chinese and be very concise. Translate the following to chinese: $str" 2>/dev/null | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
+     str="${$(< /dev/shm/lmf)//$'\n'/}"
+   fi
+elif [ -n "$BASH" ]; then
+   #Running in bash because you changed the shebang on line 1
+   str="${str#*(+([![:space:]]))}"
+  #Are we engaging with a LLM via a 'wake' word?
+   if [[ "$str" == ?[Aa]ssistant* ]]; then
+     str="${str#?[Aa]ssistant[,.] }"
+     str="${str^}"
+     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --prompt "Provide a concise response to the following: $str"  --no-display-prompt -n 150 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
+   elif [[ "$str" == ?[Tt]ranslator* ]]; then
+     str="${str#?[Tt]ranslator[,.] }"
+     echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LLMODEL --no-display-prompt --prompt "Respond in chinese and be concise. Translate the following to chinese: $str"  -n 80 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
+     str="$(< /dev/shm/lmf)"
+     str=${str#*(+([![:space:]]))}
+   fi
+else
+    #Not testing for AI input if shell is unknown:
+    echo "Unknown shell, assuming bash compliance"
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+fi
+
+#We have a result (either recognized text or AI response), now we make a few decisions:
+#If this is somehow run in a text console: 
+if [[ -z "${DISPLAY}" ]] || [[ -z "${DESKTOP_SESSION}" ]] || [[ -z "${XDG_CURRENT_DESKTOP}" ]]; then
+#"Not running in a known graphics environment. Using standard output:
+    echo $str ; exit 0
+else
+#xsel or wl-copy:
+#echo "Pasting now: "
+ case "$wm" in
+    "x11")
+        if [ "$CLIPBOARD" = true ]; then
+          echo $str | xsel -ib
+          if [ "$AUTOPASTE" = true ]; then blahste ; fi
+        else
+          echo $str | xsel -ip
+          if [ "$AUTOPASTE" = true ]; then blahste -p ; fi
+        fi
+        ;;
+    "wayland")
+        if [ "$CLIPBOARD" = true ]; then
+          echo $str | wl-copy
+        else
+          echo $str | wl-copy -p
+        fi 
+        ;;
+    *)
+        echo $str
+        ;;
+ esac
+fi
+
+#echo "Text processed after another: "$((($(date +%s%N) - stmp)/1000000)) "ms"
