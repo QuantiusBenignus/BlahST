@@ -6,18 +6,20 @@
 - **Option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
 - **Able to select speech input language and translate from the command line with the dedicated `wsiml` script**
 - **Instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
-
-Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (AND audio) with some upcoming features (AI translator and assistant, in testing stage):
+- **NEW: Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** (TODO: A dedicated documentation section describing the AI assistant functions)
+   
+Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some upcoming features (AI translator and assistant, in testing stage):
 
 https://github.com/user-attachments/assets/877c699d-cf8b-4dd2-bc0e-75dee9054cf2
 
-In the above video, the audio starts with the system anouncing the start of screencasting (My GNOME extension ["Voluble"](https://github.com/QuantiusBenignus/voluble) speaks outloud all GNOME desktop notifications). Demonstrated at the end is the upcomming "AI translator" which uses the text transcribed by BlahST (whisper.cpp), formats it into a LLM prompt and sends it to a local multilingual LLM (llama.cpp or llamafile) which returns the Chinese translation as text and also speaks it using a neural TTS. Orchestrating this from the command line with lean executables leaves the system surprisingly snappy (From the video you can see that the PC barely breaks any sweat - temperatures remain low-ish.)
+_In the above video, the audio starts with the system anouncing the screencasting (my GNOME extension ["Voluble"](https://github.com/QuantiusBenignus/voluble) speaks outloud all GNOME desktop notifications), followed by multiple turns of speech input/recognition. Demonstrated at the end is one of the upcomming "AI functions" which uses the text transcribed by BlahST (whisper.cpp), formats it into a LLM prompt and sends it to a local multilingual LLM (llama.cpp or llamafile) which returns the Chinese translation as text and also speaks it using a neural TTS. Orchestrating this from the command line with lean executables leaves the system surprisingly snappy (From the video you can see that the PC barely breaks any sweat - temperatures remain low-ish.)_
 
-### Principle of operation
+### Principle of Operation (_the best UI is no UI at all._)
+The idea with BlahST is to be the UI-free software equivalent of a Mongol raid; short and powerfull burst of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard (unless you pass it by an AI before that). An universal approach that should work in most Linux desktop environments and distributions.
+
 The work is done by the *wsi* (*wsiml* for multilingual users) script, similar to the one in the GNOME extension [Blurt](https://github.com/QuantiusBenignus/blurt/).
 Speech recognition is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN or localhost.
 Alternativelly, you can choose to simply download and use an actually portable executable (with an embedded whisper model) [whisperfile](https://huggingface.co/Mozilla/whisperfile/tree/main), now part of the [llamafile](https://github.com/Mozilla-Ocho/llamafile) repository. 
-The idea with BlahST is to not even write an extension like Blurt. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard. An universal approach that should work in most Linux desktop environments and distributions.
 
 When speech input is initiated with a hotkey, a microphone indicator appears in the top bar (at least in GNOME) and is shown for the duration of the recording (can be interupted with another hotkey).
 The disappearance of the microphone icon from the top bar indicates completion and the transcribed text can be pasted from the clipboard. On slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to longer transcription time. On my computer, via the whisper.cpp server API, it is less than 150 ms (300 ms with local whisper.cpp) for an average paragraph of spoken text.
