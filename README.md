@@ -8,7 +8,11 @@
 - **New: (Hacky experiment) [Setup for X11 users to paste transcribed text automatically](https://github.com/QuantiusBenignus/BlahST#summary)**
 - **New: instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
 
-Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demostration video:
+Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demostration video with some upcoming features (AI translator and assistant, in testing stage):
+
+https://github.com/user-attachments/assets/805dded9-bb68-4e98-862b-bde9bb33696a
+
+
 
 https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
 
