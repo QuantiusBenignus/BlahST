@@ -11,13 +11,7 @@ Using low-resource, optimized command-line tools, spoken text input happens very
 
 https://github.com/user-attachments/assets/877c699d-cf8b-4dd2-bc0e-75dee9054cf2
 
-
-
-https://github.com/user-attachments/assets/805dded9-bb68-4e98-862b-bde9bb33696a
-
-Please, note that in the above video, the first transcribed word is not user speech input but the system anouncing the start of screencasting (My GNOME extension ["Voluble"](https://github.com/QuantiusBenignus/voluble) speaks outloud all GNOME desktop notifications). The speech recognition engine catches the end of it. Also, the demonstrated "AI translator" uses the text transcribed by BlahST (whisper.cpp) formats it into a LLM prompt and sends it to a multilingual LLM which returns the Chinese translation as text and also spoken by a neural TTS. Orchestrating this from the command line with lean executables leaves the system surprisingly snappy (From the video you can see that the PC barely breaks any sweat - temperatures remain low-ish.).
-
-https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
+In the above video, the audio starts with the system anouncing the start of screencasting (My GNOME extension ["Voluble"](https://github.com/QuantiusBenignus/voluble) speaks outloud all GNOME desktop notifications). Demonstrated at the end is the upcomming "AI translator" which uses the text transcribed by BlahST (whisper.cpp), formats it into a LLM prompt and sends it to a local multilingual LLM (llama.cpp or llamafile) which returns the Chinese translation as text and also speaks it using a neural TTS. Orchestrating this from the command line with lean executables leaves the system surprisingly snappy (From the video you can see that the PC barely breaks any sweat - temperatures remain low-ish.)
 
 ### Principle of operation
 The work is done by the *wsi* (*wsiml* for multilingual users) script, similar to the one in the GNOME extension [Blurt](https://github.com/QuantiusBenignus/blurt/).
@@ -202,7 +196,10 @@ and then restart your Linux computer.
 For the aforementioned reasons, especially if HDD is the main storage media, one can also move the ASR model files needed by whisper.cpp in the same location (/dev/shm). These are large files, that can be transferred to this location at the start of a terminal session (or at system startup). This can be done using your `.profile` file by placing something like this in it: 
 ```
 ([ -f /dev/shm/ggml-base.en.bin ] || cp /path/to/your/local/whisper.cpp/models/ggml* /dev/shm/)
+
 ```
+
+https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
 </details>
 
 ---
