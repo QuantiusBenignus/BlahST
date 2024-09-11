@@ -9,6 +9,10 @@
 
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (AND audio) with some upcoming features (AI translator and assistant, in testing stage):
 
+https://github.com/user-attachments/assets/877c699d-cf8b-4dd2-bc0e-75dee9054cf2
+
+
+
 https://github.com/user-attachments/assets/805dded9-bb68-4e98-862b-bde9bb33696a
 
 Please, note that in the above video, the first transcribed word is not user speech input but the system anouncing the start of screencasting (My GNOME extension ["Voluble"](https://github.com/QuantiusBenignus/voluble) speaks outloud all GNOME desktop notifications). The speech recognition engine catches the end of it. Also, the demonstrated "AI translator" uses the text transcribed by BlahST (whisper.cpp) formats it into a LLM prompt and sends it to a multilingual LLM which returns the Chinese translation as text and also spoken by a neural TTS. Orchestrating this from the command line with lean executables leaves the system surprisingly snappy (From the video you can see that the PC barely breaks any sweat - temperatures remain low-ish.).
