@@ -3,16 +3,15 @@
 
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp.** 
 
-- **Now with the option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
-- **Now able to select language and translate from the command line with the dedicated `wsiml` script**
-- **New: (Hacky experiment) [Setup for X11 users to paste transcribed text automatically](https://github.com/QuantiusBenignus/BlahST#summary)**
-- **New: instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
+- **Option to send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
+- **Able to select speech input language and translate from the command line with the dedicated `wsiml` script**
+- **Instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
 
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (AND audio) with some upcoming features (AI translator and assistant, in testing stage):
 
 https://github.com/user-attachments/assets/805dded9-bb68-4e98-862b-bde9bb33696a
 
-
+Please, note that in the above video, the first transcribed word is not user speech input but the system anouncing the start of screencasting (My GNOME extension ["Voluble"](https://github.com/QuantiusBenignus/voluble) speaks outloud all GNOME desktop notifications). The speech recognition engine catches the end of it. Also, the demonstrated "AI translator" uses the text transcribed by BlahST (whisper.cpp) formats it into a LLM prompt and sends it to a multilingual LLM which returns the Chinese translation as text and also spoken by a neural TTS. Orchestrating this from the command line with lean executables leaves the system surprisingly snappy (From the video you can see that the PC barely breaks any sweat - temperatures remain low-ish.).
 
 https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b-9550-4c428a5a8f0a
 
