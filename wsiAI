@@ -36,7 +36,7 @@ NTHR=8
 CLIPBOARD=false
 # Default whisper.cpp model file for ASR inference (base.en provides excellent WER for English only)
 WMODEL="$TEMPD/ggml-base.en.bin"
-# Use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
+# Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
 WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
 #Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
 LLMODEL="$HOME/AI/Models/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
@@ -68,7 +68,7 @@ command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >
 #The next is only needed if curl requests json output from the whisper.cpp server;
 #command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
 command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+[ -n $WHISPERFILE ] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
 \nor download a whisperfile portable executable w model inside (see https://huggingface.co/Mozilla/whisperfile/tree/main)\
 \nand create 'transcribe' in your PATH as a symbolic link to the chosen executable, e.g.\n \
 # 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
