@@ -116,7 +116,7 @@ if [ -n "$IPnPORT" ]; then
         -F temperature_inc="0.2" \
         -F response_format="text")
 # | jq -r '.text' )
-elif [[ "$transcribe" == *.llamafile ]]; then
+elif [[ "$whf" == *.llamafile ]]; then
     #echo "Using whisperfile: "
     str="$($whf -t $NTHR -nt -f $ramf 2>/dev/null)"  
 else
