@@ -16,8 +16,8 @@ fi
 export PATH="$dir:$PATH"
 echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi" "wsiml"
-cp -t "$dir" "wsi" "wsiml"
+chmod +x "wsi" "wsiml" "wsiAI"
+cp -t "$dir" "wsi" "wsiml" "wsiAI"
 #The following is commented because on some systems .profile checks if $HOME/.local/bin exists and adds it to the PATH.
 # # Add the directory to the PATH permanently for Bash
 # if [ -f "$HOME/.profile" ]; then
@@ -55,6 +55,7 @@ fi
 # Ask the user if they have a local whisper.cpp
 echo " "
 echo "You can use a local whisper.cpp installation, or connect to a whisper.cpp server."
+echo "If you have a portable whisperfile instead of whisper.cpp, answer 'n' to the next question."
 echo "Do you want to use a local whisper.cpp preinstalled on this machine? [Y/n]: "
 read confirm
 confirm="${confirm:-Y}" 
