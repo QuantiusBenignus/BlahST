@@ -13,7 +13,7 @@
 
 # NAME: wsiml (Multi-lingual version of wsi) 
 # PREREQUSITES: 
-#  - whisper.cpp 'main' AND/OR 'server' installation (see https://github.com/ggerganov/whisper.cpp) 
+#  - whisper.cpp 'main' AND/OR 'server' installation (see https://github.com/ggerganov/whisper.cpp) or a whisperfile
 #  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools from your system's repositories.
 #--------------------------------------------------------------------------
 #Use those timestamps for timing your app/server performance:
@@ -162,26 +162,7 @@ lang="en"
 model=${WHISPER_DMODEL:-"$HOME/CHANGE_PATH_TO/WHISPER_CPP/MODELS/HERE/ggml-small.bin"}
 #---END USER CONFIG BLOCK------------------------------------------------------------------------
 
-#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
-command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
-#The next is only needed if curl requests json output from the whisper.cpp server;
-#command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
-command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
-\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
- 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
-#Now let's check if we are in X11 or Wayland and use the right utility:
-if [[ wm == "wayland" ]]; then
-    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
-elif [[ wm == "X11" ]]; then
-    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
-fi
-#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
-
-#Hear the complaints of the above tools and do not continue with the sequence:
-set -e
-
-# Process command line arguments
+# Process command line arguments first
 while [ $# -gt 0 ]; do
     case "$1" in
         -c|--clipboard)
@@ -227,9 +208,27 @@ while [ $# -gt 0 ]; do
             ;;
     esac
 done
-
 # Store the remaining arguments in a variable
 rem_args=("$@")
+
+#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
+command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
+#The next is only needed if curl requests json output from the whisper.cpp server;
+#command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
+command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+[ -n $whf ] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
+ 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
+#Now let's check if we are in X11 or Wayland and use the right utility:
+if [[ wm == "wayland" ]]; then
+    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
+elif [[ wm == "X11" ]]; then
+    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
+fi
+#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
+
+#Hear the complaints of the above tools and do not continue with the sequence:
+set -e
 
 #echo "Recording now: "$(date +%s.%N)
 
