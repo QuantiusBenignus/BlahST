@@ -16,6 +16,7 @@
 #  - whisper.cpp installation (see https://github.com/ggerganov/whisper.cpp) or a whisperfile
 #  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools from your system's repositories.
 #  - optional llama.cpp or llamafile (and models) for AI assistant/translator functionality.
+#  - optional xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
 #  - Piper neural text-to-speech engine for spoken AI assistant response 
 #--------------------------------------------------------------------------
 #X11 or Wayland (2nd line may catch edge cases):
@@ -55,7 +56,7 @@ rtts="16000"
 TRANSMODEL="$HOME/AI/Models/piper/zh_CN-huayan-medium.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
 #The above model has sample rate 22050 (if you change it, adjust the sample rate below):
 rtrans="22050" 
-# Try to paste automatically on completed transcription (EXPERIMENTAL):
+# Try to paste automatically on completed transcription, reqires xdotool and such:
 AUTOPASTE=false
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
 #(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
@@ -71,7 +72,7 @@ command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 
 [ -n $WHISPERFILE ] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
 \nor download a whisperfile portable executable w model inside (see https://huggingface.co/Mozilla/whisperfile/tree/main)\
 \nand create 'transcribe' in your PATH as a symbolic link to the chosen executable, e.g.\n \
-# 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
+'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
 command -v llam &>/dev/null || { echo -e "For interaction with an AI, install llama.cpp (see https://github.com/ggerganov/llama.cpp)\
 \nor download a llamafile portable executable (see https://huggingface.co/Mozilla)\
 \nand create in your PATH a symbolic link to the llama-cli executable, e.g.\n \
@@ -81,8 +82,14 @@ command -v piper &>/dev/null || { echo -e "Please, install piper text-to-speech 
 #Now let's check if we are in X11 or Wayland and use the right utility:
 if [[ wm == "wayland" ]]; then
     command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
+    if [ "$AUTOPASTE" = true ]; then 
+       command -v ydotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install ydotool" >&2 ; exit 1 ; }
+    fi
 elif [[ wm == "X11" ]]; then
     command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
+    if [ "$AUTOPASTE" = true ]; then 
+       command -v xdotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install xdotool" >&2 ; exit 1 ; }
+    fi
 fi
 echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n"
 #---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
@@ -218,17 +225,25 @@ else
     "x11")
         if [ "$CLIPBOARD" = true ]; then
           echo $str | xsel -ib
-          if [ "$AUTOPASTE" = true ]; then blahste ; fi
+          # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
+          if [ "$AUTOPASTE" = true ]; then xdotool key ctrl+v ; fi
         else
           echo $str | xsel -ip
-          if [ "$AUTOPASTE" = true ]; then blahste -p ; fi
+          # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
+          # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
+          if [ "$AUTOPASTE" = true ]; then xdotool click 2 ; fi
         fi
         ;;
     "wayland")
         if [ "$CLIPBOARD" = true ]; then
           echo $str | wl-copy
+          # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
+          if [ "$AUTOPASTE" = true ]; then ydotool key 37:1 55:1 55:0 37:0 ; fi
         else
           echo $str | wl-copy -p
+          # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
+          # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
+          if [ "$AUTOPASTE" = true ]; then ydotool click 0xC2; fi
         fi 
         ;;
     *)
