@@ -35,10 +35,10 @@ For keyboard-only operation, with the standard `CTRL+V` for example, the standar
 <details>
 <summary>DATAFLOW DIAGRAMS</summary>
    
-   #### wsi script
+   #### wsiAI script (w sample LLM interaction)
    ![wsiAI dataflow](https://github.com/user-attachments/assets/12a4a576-5227-4592-82ad-b8618a1cfae7)
 
-   #### blooper   
+   #### blooper (speech input in a loop)
 ![blooper dataflow](https://github.com/user-attachments/assets/550d51fc-65f3-4c01-b355-9c6bd0ff2c49)
 </details>
 
@@ -108,7 +108,7 @@ To start and stop speech input, for both manual and automatic installation
 * In the new window, scroll down to "Custom Shortcuts" and press it.
 * Press "+" to add a new shortcut and give it a name: "Start Recording Speech"
 * In the "Command" field type `/home/yourusername/.local/bin/wsi` for using the middle mouse button or change it to `.../wsi -c` for using the clipboard.
-* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` )
+* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+a
 * Click Add and you are done. 
 
@@ -137,7 +137,7 @@ This is simalr to the GNOME setup above (for reference, see its more detailed in
 * Navigate to Keyboard → Application Shortcuts.
 * Click on the Add button to create a new shortcut.
 * Enter the name of the shortcut and the command e.g. `/home/yourusername/.local/bin/wsi`  or `.../wsi -c` for using the clipboard.
-* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` )
+* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Press the keys you wish to assign to the shortcut.
 * Click OK to save the shortcut.
  The hotkey to stop speech recording should be done similarly with `pkill --signal 2 rec`.
@@ -156,7 +156,7 @@ This is similar to the GNOME setup above (for reference, see its more detailed i
 * Give your new shortcut a name.
 * Choose the desired shortcut key combination by clicking on the button next to "None" and pressing the keys you want to assign to the shortcut.
 * In the Trigger tab, specify the command to be executed when the shortcut is triggered. e.g. `/home/yourusername/.local/bin/wsi` or `.../wsi -c`
-* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` )
+* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Ensure that the Enabled checkbox is checked to activate the shortcut.
 * Apply the changes by clicking Apply or OK.
 The hotkey to stop speech recording should be done similarly with `pkill --signal 2 rec`. 
@@ -181,7 +181,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 * If using a whisperfile instead of, or in addition to a compiled whisper.cpp, invoke with `wsi -w ...` and the script will use the preset actually portable executable with the embedded whisper model of choice.  
 * For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle assign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
-* **Experimental:** Users can use the supplied script **blooper** for continuous automatic speech-to-text input (no need to press CTRL+V or click middle mouse button.) This is demonstrated in the second video above. Please, note that the Clipboard is used by default, the text will be autopasted under the keyboard carret, but in principle the PRIMARY selection can be set up instead, a middle mouse button click will be simulated and the text pasted at the position of the mouse pointer at the (somewhat arbitrary) time the text is available. Please, note that this relieas on silence detection, which depends on your physical environment. In noisy environments, use the hot key to stop recording.
+* **Experimental:** Users can use the supplied script **blooper** for continuous automatic speech-to-text input (no need to press CTRL+V or click middle mouse button.) This is demonstrated in the second video above. Please, note that the Clipboard is used by default, the text will be autopasted under the keyboard carret, but in principle the PRIMARY selection can be set up instead, a middle mouse button click will be simulated and the text pasted at the current position of the mouse pointer at the (somewhat arbitrary) time the text is available. Please, note that this relies on silence detection, which depends on your physical environment. In noisy environments, use the hot key to stop recording.
 ---
 
 <details>
@@ -224,4 +224,4 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 * Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggerganov/whisper.cpp))
 * Justine Tunney, CJ Pais and the llamafile community (for llamafile and whisperfile)
 * The **sox** developers (for the venerable "Swiss Army knife of sound processing tools")
-* The creators and maintainers of CLI utilities such as **xsel, wl-copy, curl, jq** and others that make the Linux environment (CLI and GUI) such a powerful paradigm.
+* The creators and maintainers of CLI utilities such as **xsel, wl-copy, curl, jq, xdotool and others** that make the Linux environment (CLI and GUI) such a powerful paradigm.
