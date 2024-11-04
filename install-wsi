@@ -16,8 +16,8 @@ fi
 export PATH="$dir:$PATH"
 echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi" "wsiml" "wsiAI"
-cp -t "$dir" "wsi" "wsiml" "wsiAI"
+chmod +x "wsi" "wsiml" "wsiAI" "blooper"
+cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper"
 #The following is commented because on some systems .profile checks if $HOME/.local/bin exists and adds it to the PATH.
 # # Add the directory to the PATH permanently for Bash
 # if [ -f "$HOME/.profile" ]; then
