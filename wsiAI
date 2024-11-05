@@ -184,6 +184,7 @@ if [ -n "$ZSH_NAME" ]; then
      str="${(u)str}"
      $llamf -t $NTHR -c 2048 --temp 0 -ngl 999 --no-display-prompt -n 150 -m $LIGHTLMODEL --prompt "Provide a very concise response to the following: $str" 2>/dev/null | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
      str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
+     str="${str/\[end of text\]}"
    elif [[ "$str" == "Translator"*  ]]; then
      str="${str#?[Tt]ranslator[,.] }"
      echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
@@ -199,6 +200,7 @@ elif [ -n "$BASH" ]; then
      str="${str^}"
      $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --prompt "Provide a concise response to the following: $str"  --no-display-prompt -n 150 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
      str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
+     str="${str/\[end of text\]}"
    elif [[ "$str" == ?[Tt]ranslator* ]]; then
      str="${str#?[Tt]ranslator[,.] }"
      echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
