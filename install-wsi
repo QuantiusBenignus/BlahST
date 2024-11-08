@@ -83,6 +83,17 @@ else
     exit 1
 fi
 
+# Let's also create a symbolic link to the whisper.cpp server:
+if [ -x "$whisper_path/server" ]; then
+    # Create a symbolic link called "whserver" in $dir pointing to "server"
+    ln -s "$whisper_path/server" "$dir/whserver"
+    echo "Symbolic link 'whserver' created in $dir."
+else
+    echo "The 'server' executable was not found in the specified folder."
+    echo "... please, rerun this and input the correct whisper.cpp location!"
+    exit 1
+fi
+
 # Prompt the user for the path to whisper.cpp models
 echo ""
 echo "Choosing a default whisper.cpp model file..."
@@ -187,5 +198,15 @@ echo "   OK"
 #echo "   OK"
 echo "As a final step, please, set up the server and adjust its IP and port number in the CONFIGURATION block of wsi and/or wsiml."
 fi
+
+echo " "
+echo "BlahST is normally run from the desktop and the terminal standard ouput is not visible..."
+echo "Errors will go to the logs but the script will be silent on error..."
+echo "We can use Desktop notifications with libnotify-bin, widely available across distributions:"
+echo -n "Checking for notify-send (part of libnotify-bin)..."
+if ! command -v notify-send >/dev/null  2>&1; then
+    echo "Please, install libnotify-bin (package name libnotify on some systems, e.g. 'apt install libnotify-bin', or 'dnf install libnotify'...)" ; exit  1
+fi
+echo "   OK"
 
 echo "Installation complete. Run the 'wsi' and/or 'wsiml' scripts from the command line first to verify correct operation."
