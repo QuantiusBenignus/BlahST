@@ -116,10 +116,13 @@ while [ $# -gt 0 ]; do
             #This uses the hostname or IP and port specified in the config block
             #Can be overwritten, supplied as command line argument IP:PORT instead of this option
             IPnPORT="$WHOST:$WPORT" 
-            #if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
-            #    echo "Can't connect to whisper.cpp server at provided address!" >&2   
-            #    exit 1
-            #fi
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                echo "Can't connect to whisper.cpp server at provided address!" >&2
+                notify-send "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
+                #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
+                #pidof whserver > /dev/null  2>&1 || { whserver --host 0.0.0.0 --port 58080 -t $NTHR -nt -m $WMODEL 2>/dev/null & }
+                exit 1
+            fi
             shift
             ;;
         -h|--help)
@@ -136,6 +139,9 @@ while [ $# -gt 0 ]; do
             IPnPORT=$1
             if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
                 echo "Can't connect to a whisper.cpp server at provided address!" >&2   
+                notify-send "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
+                #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
+                #pidof whserver > /dev/null  2>&1 || { whserver --host 0.0.0.0 --port 58080 -t $NTHR -nt -m $WMODEL 2>/dev/null & }
                 exit 1
             fi
             shift
@@ -148,7 +154,7 @@ rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 3% channels 1 2>/dev/null
 #Time stamps for timing the performance of the various stages (Un/Comment as needed): 
 #stmp=$(date +%s%N)
 
-if [ -n "$IPnPORT" ] && [ $(pidof whserver) ]; then 
+if [ -n "$IPnPORT" ] ; then 
     echo "Sending to server now: "
     str=$(curl -S -s $IPnPORT/inference \
         -H "Content-Type: multipart/form-data" \
@@ -160,7 +166,7 @@ elif [[ "$whf" == *.llamafile ]]; then
     echo "Using $whf:"
     str="$($whf -t $NTHR -nt --gpu auto -f $ramf 2>/dev/null)"     
 else
-    #Also the default fallback if the whisper server is offline, wsi -n will end up here.
+    #A default fallback if the whisper server is offline.
     echo "Transcribing now: "
     str="$(transcribe -t $NTHR -nt -fa -m $WMODEL -f $ramf 2>/dev/null)" 
 fi
