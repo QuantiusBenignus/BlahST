@@ -33,10 +33,11 @@ ramf="$TEMPD/wfile"
 NTHR=8
 #It seems that the optimum number of transcribe threads should equal half CPU processing cores:
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
-# Use PRIMARY selection (middle mouse button to paste) unless CLIPBOARD set to true: 
-CLIPBOARD=false
-# Default whisper.cpp model file for ASR inference (base.en provides excellent WER for English only)
-WMODEL="$TEMPD/ggml-base.en.bin"
+# Use clipboard to paste from unless PRIMESEL set to true to use PRIMARY selection (middle mouse button to paste): 
+PRIMESEL=false
+# Default whisper.cpp model file for local ASR inference (base.en provides excellent WER for English only)
+#WMODEL="$TEMPD/ggml-base.en.bin"
+WMODEL=${WHISPER_DMODEL:-"$HOME/AI/Models/whisper/ggml-base.en.bin"}
 # Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
 WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
 #Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
@@ -45,26 +46,49 @@ LLMODEL="$HOME/AI/Models/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggi
 LIGHTLMODEL="$HOME/AI/Models/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
 #Default llama.cpp executable:
 llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
-#Uncomment the following to use a LLM from a llammafile instead of standalone llamma.cpp:
+#Uncomment the following to use a LLM from a llammafile (also needs flag -a) instead of standalone llamma.cpp:
 #LLAMAFILE="$HOME/AI/Models/gemma-2-2b-it.Q6_K.llamafile"
-LLAMAFILE="llamafile-0.8.13" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.8.13
+LLAMAFILE="llamafile-0.8.16" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.8.16
 #Use the following text-to-speech Piper model for human-like audio response in English:
 TTSMODEL="$HOME/AI/Models/piper/en_US-lessac-low.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
-#The above TTS model has sample rate 16000 (if you change it, adjust the sample rate below):
+#The above TTS model has sample rate 16000 (if you change the model, adjust the sample rate below):
 rtts="16000" 
 #Use the following text-to-speech Piper model for human-like audio response in the language (e.g. chinese) of the LLM translator function:
 TRANSMODEL="$HOME/AI/Models/piper/zh_CN-huayan-medium.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
 #The above model has sample rate 22050 (if you change it, adjust the sample rate below):
 rtrans="22050" 
 # Try to paste automatically on completed transcription, reqires xdotool and such:
-AUTOPASTE=false
+AUTOPASTE=true
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
 #(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
 WHOST="127.0.0.1"
 WPORT="58080"             
 #---END USER CONFIG BLOCK------------------------------------------------------------------------
 
+#Notification code, prefers zenity, then notify-send, which should be available across the
+#most distributions, in package libnotify or libnotify-bin:
+desknote() {
+    local title="$1"
+    local message="$2"
+
+    if command -v zenity &> /dev/null; then
+        zenity --info --text="$message"
+    elif command -v notify-send &> /dev/null; then
+        notify-send "$title" "$message"
+    elif command -v kdialog &> /dev/null; then
+        kdialog --passivepopup "$message" 5
+    else
+        echo "Notification Message: $message" >&2
+        echo "Please install zenity or notify-send to use notifications." >&2
+        echo "You can install either using your package manager, e.g.:" >&2
+        echo "  sudo apt-get install zenity or sudo apt-get install libnotify-bin" >&2
+        echo "  sudo yum install zenity or sudo apt-get install libnotify" >&2
+        echo "  sudo pacman -S zenity, etc." >&2
+    fi
+}
+
 #---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
+#The install-wsi script should have taken care of this, left here for the manual install.
 command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
 #The next is only needed if curl requests json output from the whisper.cpp server;
 #command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
@@ -77,8 +101,10 @@ command -v llam &>/dev/null || { echo -e "For interaction with an AI, install ll
 \nor download a llamafile portable executable (see https://huggingface.co/Mozilla)\
 \nand create in your PATH a symbolic link to the llama-cli executable, e.g.\n \
  'ln -s /full/path/to/llama.cpp/llama-cli \$HOME/.local/bin/llam'" >&2 ; exit 1 ; }
-command -v piper &>/dev/null || { echo -e "Please, install piper text-to-speech (see https://github.com/rhasspi/piper)\
+command -v piper &>/dev/null || { echo -e "Please, install piper text-to-speech (see https://github.com/rhasspy/piper)\
 \nto use the AI assistant and translator features with human-like voice response." >&2 ; exit 1 ; }
+# We will use zenity or notify-send (part of libnotify or libnotify-bin in some distros) for desktop notifications:
+command -v zenity &>/dev/null || command -v notify-send &>/dev/null || { echo "zenity or notify-send needed for error reporting. Please, install zenity or libnotify-bin" >&2 ; exit 1 ; }
 #Now let's check if we are in X11 or Wayland and use the right utility:
 if [[ wm == "wayland" ]]; then
     command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
@@ -92,6 +118,9 @@ elif [[ wm == "X11" ]]; then
     fi
 fi
 echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n"
+desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
+To remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n \
+\nYou can run wsiAI --help from the Terminal to learn about its options..."
 #---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
 
 #Hear the complaints of the above tools and do not continue with the sequence:
@@ -100,8 +129,15 @@ set -e
 # Process command line arguments
 while [ $# -gt 0 ]; do
     case "$1" in
+        -p|--primary)
+            PRIMESEL=true
+            shift
+            ;;
         -c|--clipboard)
-            CLIPBOARD=true
+            # This is transitional warning due to breaking change (will be removed in the future). Clipboard is now the default:
+            desknote "Breaking Change:" "The '-c' flag is deprecated, since clipboard is now default. \n \
+            Remove unnecessary '-c' from your desktop shortcut definitions. \n \
+            To use primary selection as the text source, use the '-p' flag in your desktop shortcuts."
             shift
             ;;
         -w|--whisperfile)
@@ -118,7 +154,7 @@ while [ $# -gt 0 ]; do
             IPnPORT="$WHOST:$WPORT" 
             if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
                 echo "Can't connect to whisper.cpp server at provided address!" >&2
-                notify-send "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
+                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
                 #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
                 #pidof whserver > /dev/null  2>&1 || { whserver --host 0.0.0.0 --port 58080 -t $NTHR -nt -m $WMODEL 2>/dev/null & }
                 exit 1
@@ -126,12 +162,18 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         -h|--help)
-            echo -e "Usage: $0 [-c|--clipboard] [-n|--netapi] [-w|--whisperfile] [-l|--llamafile]\n"
-            echo -e "  -c, --clipboard: Use clipboard instead of PRIMARY selection\n"
+            echo -e "Usage: $0 [-p|--primary] [-n|--netapi] [-w|--whisperfile] [-l|--llamafile]\n"
+            echo -e "  -p, --primary: Use PRIMARY selection instead of clipboard\n"
             echo -e "  -n, --netapi: Use whisper.cpp server with the host:port in the script's GONFIG block\n"
             echo -e "  -w, --whisperfile: Use whisperfile instead of standalone whisper.cpp. Note that the whisperfile will use the script-configured (not embedded) model.\n"
             echo -e "  -a, --llamafile: Use llamafile instead of standalone llama.cpp. Note that the llamafile will use the script-configured (not embedded) LLM model.\n"
             echo -e "Any other non-flag command-line argument is expected to be an <IP:port> pair. Error will occur if diferent."
+            echo -e 'Speaking: "Assistant,..." followed by a question, will trigger the AI model response and that will be available for pasting'
+            echo -e 'Speaking: "Computer,..." followed by a request, will make the LLM attempt to deliver a Linux command that matches the request'
+            echo -e 'Speaking: "Coordinator,..." followed by a task, will make the LLM respond with the task formatted as a TODO item, as in Joplin inline TODOs'
+            echo -e 'Saying: "Translator,..." followed by a statement, will make the AI model translate the statement and the translation willl be available for pasting'
+            echo -e "The AI functions are experimental and work in progress." 
+            echo -e "\nCAUTION: Transfering any AI-generated Linux commands to your command line is at your own risk. Make sure you know what you are doing."
             exit 0
             ;;
         *)
@@ -139,7 +181,7 @@ while [ $# -gt 0 ]; do
             IPnPORT=$1
             if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
                 echo "Can't connect to a whisper.cpp server at provided address!" >&2   
-                notify-send "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
+                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
                 #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
                 #pidof whserver > /dev/null  2>&1 || { whserver --host 0.0.0.0 --port 58080 -t $NTHR -nt -m $WMODEL 2>/dev/null & }
                 exit 1
@@ -155,7 +197,7 @@ rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 3% channels 1 2>/dev/null
 #stmp=$(date +%s%N)
 
 if [ -n "$IPnPORT" ] ; then 
-    echo "Sending to server now: "
+    #echo "Sending to server now: "
     str=$(curl -S -s $IPnPORT/inference \
         -H "Content-Type: multipart/form-data" \
         -F file="@$ramf" \
@@ -163,11 +205,11 @@ if [ -n "$IPnPORT" ] ; then
         -F temperature_inc="0.2" \
         -F response_format="text")
 elif [[ "$whf" == *.llamafile ]]; then
-    echo "Using $whf:"
+    #echo "Using $whf:"
     str="$($whf -t $NTHR -nt --gpu auto -f $ramf 2>/dev/null)"     
 else
     #A default fallback if the whisper server is offline.
-    echo "Transcribing now: "
+    #echo "Transcribing now: "
     str="$(transcribe -t $NTHR -nt -fa -m $WMODEL -f $ramf 2>/dev/null)" 
 fi
 
@@ -182,37 +224,52 @@ str="${str#$'\n'}"
 str="${str#$'\n'}"
 #Prefer the power of zsh, but loose full POSIX compliance.
 if [ -n "$ZSH_NAME" ]; then
-   str="${str#*([[:space:]])}"
-   str="${(u)str}"
+   str="${str# }"
+   str="${str# }"
+   str="${(C)str:0:1}${str#?}"
   #Are we engaging with a LLM via a 'wake' word?
-   if [[ "$str" == "Assistant"*  ]]; then
-     str="${str#?[Aa]ssistant[,.] }"
-     str="${(u)str}"
-     $llamf -t $NTHR -c 2048 --temp 0 -ngl 999 --no-display-prompt -n 150 -m $LIGHTLMODEL --prompt "Provide a very concise response to the following: $str" 2>/dev/null | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
-     str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
-     str="${str/\[end of text\]}"
-   elif [[ "$str" == "Translator"*  ]]; then
-     str="${str#?[Tt]ranslator[,.] }"
+   if [[ "$str" == Assistant*  ]]; then
+     str="${str#Assistant[,.] }"
+     str="${str%'\n'}"
+     strai=$($llamf -t $NTHR -c 2048 --temp 0 -ngl 99 --no-display-prompt -n 150 -m $LIGHTLMODEL --prompt "Provide a concise response (but do not explain why is it concise) to the following: $str" 2>/dev/null )
+     strai="${strai/\[end of text\]}"
+     echo "$strai" | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     str="${(C)str}\n$strai" #We can still paste the result
+   elif [[ "$str" == [Tt]ranslator*  ]]; then
+     echo $str
+     str="${str#[Tt]ranslator[,. ] }"
      echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
-     $llamf -t $NTHR -c 2048 --temp 0 -ngl 999 -n 80 -m $LLMODEL --no-display-prompt --prompt "Respond in chinese and be very concise. Translate the following to chinese: $str" 2>/dev/null | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 1024 --temp 0 -ngl 99 -n 80 -m $LLMODEL --no-display-prompt --prompt "Respond only with the chinese translation, written in chinese only, and nothing more. Translate the following to chinese: $str" 2>/dev/null | sed 's/\*//g; s/\[end of text\]//g' | tee /dev/tty /dev/shm/lmf | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
      str="${$(< /dev/shm/lmf)//$'\n'/}"
+   elif [[ "$str" == [Cc]omputer*  ]]; then
+     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
+     str="${strai/\[end of text\]}"
+   elif [[ "$str" == [Cc]oordinator*  ]]; then
+     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
+     str="${strai/\[end of text\]}"
    fi
 elif [ -n "$BASH" ]; then
    #Running in bash because you changed the shebang on line 1
    str="${str#*(+([![:space:]]))}"
+   str="${str^}"
   #Are we engaging with a LLM via a 'wake' word?
    if [[ "$str" == ?[Aa]ssistant* ]]; then
      str="${str#?[Aa]ssistant[,.] }"
      str="${str^}"
-     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --prompt "Provide a concise response to the following: $str"  --no-display-prompt -n 150 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --prompt "Provide a very concise response to the following: $str"  --no-display-prompt -n 150 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
      str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
-     str="${str/\[end of text\]}"
    elif [[ "$str" == ?[Tt]ranslator* ]]; then
      str="${str#?[Tt]ranslator[,.] }"
      echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
-     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LLMODEL --no-display-prompt --prompt "Respond in chinese and be concise. Translate the following to chinese: $str"  -n 80 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --no-display-prompt --prompt "Respond in chinese and be concise. Translate the following to chinese: $str"  -n 80 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
      str="$(< /dev/shm/lmf)"
      str=${str#*(+([![:space:]]))}
+   elif [[ "$str" == [Cc]omputer*  ]]; then
+     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null | sed 's/[`\*]//g' )
+     str="${strai/\[end of text\]}"
+   elif [[ "$str" == [Cc]oordinator*  ]]; then
+     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
+     str="${strai/\[end of text\]}"
    fi
 else
     #Not testing for AI input if shell is unknown:
@@ -231,27 +288,27 @@ else
 #echo "Pasting now: "
  case "$wm" in
     "x11")
-        if [ "$CLIPBOARD" = true ]; then
-          echo $str | xsel -ib
-          # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
-          if [ "$AUTOPASTE" = true ]; then xdotool key ctrl+v ; fi
-        else
+        if [ "$PRIMESEL" = true ]; then
           echo $str | xsel -ip
           # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
           # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
           if [ "$AUTOPASTE" = true ]; then xdotool click 2 ; fi
+        else
+          echo $str | xsel -ib
+          # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
+          if [ "$AUTOPASTE" = true ]; then xdotool key ctrl+v ; fi
         fi
         ;;
     "wayland")
-        if [ "$CLIPBOARD" = true ]; then
-          echo $str | wl-copy
-          # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
-          if [ "$AUTOPASTE" = true ]; then ydotool key 37:1 55:1 55:0 37:0 ; fi
-        else
+        if [ "$PRIMESEL" = true ]; then
           echo $str | wl-copy -p
           # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
           # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
           if [ "$AUTOPASTE" = true ]; then ydotool click 0xC2; fi
+        else
+          echo $str | wl-copy
+          # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
+          if [ "$AUTOPASTE" = true ]; then ydotool key 37:1 55:1 55:0 37:0 ; fi
         fi 
         ;;
     *)
