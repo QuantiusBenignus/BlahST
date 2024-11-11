@@ -33,7 +33,8 @@ NTHR=8
 #It seems that the optimum number of transcribe threads should equal half CPU processing cores:
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 # Default whisper.cpp model file for ASR inference (base.en provides excellent WER for English only)
-WMODEL="$TEMPD/ggml-base.en.bin"
+#WMODEL="$TEMPD/ggml-base.en.bin"
+WMODEL=${WHISPER_DMODEL:-"$HOME/AI/Models/whisper/ggml-base.en.bin"}
 # Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
 WHISPERFILE="whisper-tiny.en.llamafile" 
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
@@ -41,6 +42,28 @@ WHISPERFILE="whisper-tiny.en.llamafile"
 WHOST="127.0.0.1"
 WPORT="58080"             
 #---END USER CONFIG BLOCK------------------------------------------------------------------------
+
+#Notification code, prefers zenity, then notify-send, (which should be available across
+#most distributions, in package libnotify or libnotify-bin), KDE fallback is kdialog:
+desknote() {
+    local title="$1"
+    local message="$2"
+
+    if command -v zenity &> /dev/null; then
+        zenity --info --text="$message"
+    elif command -v notify-send &> /dev/null; then
+        notify-send "$title" "$message"
+    elif command -v kdialog &> /dev/null; then
+        kdialog --passivepopup "$message" 5
+    else
+        echo "Notification Message: $message" >&2
+        echo "Please install zenity or notify-send (or kdialog for KDE) to use desktop alerts." >&2
+        echo "You can install either using your package manager, e.g.:" >&2
+        echo "  sudo apt-get install zenity or sudo apt-get install libnotify-bin" >&2
+        echo "  sudo yum install zenity or sudo apt-get install libnotify" >&2
+        echo "  sudo pacman -S zenity, etc." >&2
+    fi
+}
 
 # Process command line arguments first
 while [ $# -gt 0 ]; do
@@ -55,13 +78,14 @@ while [ $# -gt 0 ]; do
             IPnPORT="$WHOST:$WPORT" 
             #if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
             #    echo "Can't connect to whisper.cpp server at provided address!" >&2   
+            desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
             #    exit 1
             #fi
             shift
             ;;
         -h|--help)
             echo -e "Usage: $0 [-n|--netapi] [-w|--whisperfile]\n"
-            echo -e "  -n, --netapi: Use whisper.cpp server with the host:port in the GONFIG block\n"
+            echo -e "  -n, --netapi: Use whisper.cpp server with the host:port in the GONFIGURATION block\n"
             echo -e "  -w, --whisperfile: Use whisperfile instead of standalone whisper.cpp. Note that the whisperfile will use the script-configured (not embedded) model.\n"
             echo -e "Any other non-flag command-line argument is expected to be an <IP:port> pair. Error will occur if diferent."
             exit 0
@@ -71,6 +95,7 @@ while [ $# -gt 0 ]; do
             IPnPORT=$1
             if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
                 echo "Can't connect to a whisper.cpp server at provided address!" >&2   
+                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
                 exit 1
             fi
             shift
@@ -93,6 +118,9 @@ elif [[ wm == "X11" ]]; then
     command -v xdotool &>/dev/null || { echo "xdotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
 fi
 echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n"
+desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
+To remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n \
+\nYou can run blooper --help from the Terminal to learn about its options..."
 #---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
 
 #Hear the complaints of the above tools and do not continue with the sequence:
@@ -141,10 +169,11 @@ fi
 #Prefer the power of zsh, but loose full POSIX compliance.
 if [ -n "$ZSH_NAME" ]; then
    str="${str#*([[:space:]])}"
-   str="${(u)str}"
+      str="${(C)str:0:1}${str#?}"
 elif [ -n "$BASH" ]; then
    #Running in bash because you changed the shebang on line 1
    str="${str#*(+([![:space:]]))}"
+   str="${str^}"
 else
     #Not testing for AI input if shell is unknown:
     echo "Unknown shell, assuming bash compliance"
