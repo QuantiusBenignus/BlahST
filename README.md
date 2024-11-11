@@ -23,14 +23,17 @@ _The above video (unmute please) demonstrates the use of blooper, modified from 
 ### Principle of Operation (_the best UI is no UI at all._)
 The idea with BlahST is to be the UI-free software equivalent of a Mongol raid; short and powerfull burst of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard (unless you pass it by an AI before that). An universal approach that should work in most Linux desktop environments and distributions.
 
-The work is done by the *wsi* (*wsiml* for multilingual users) script, similar to the one in the GNOME extension [Blurt](https://github.com/QuantiusBenignus/blurt/).
+The work is done by one of the scripts:
+- *wsi* for general speech input, 
+- *wsiml* for multilingual users,
+- *wsiAI* for users who want to also speak with a local large language model using llama.cpp or a llamafile.
 Speech recognition is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN or localhost.
 Alternativelly, you can choose to simply download and use an actually portable executable (with an embedded whisper model) [whisperfile](https://huggingface.co/Mozilla/whisperfile/tree/main), now part of the [llamafile](https://github.com/Mozilla-Ocho/llamafile) repository. 
 
 When speech input is initiated with a hotkey, a microphone indicator appears in the top bar (at least in GNOME) and is shown for the duration of the recording (can be interupted with another hotkey).
 The disappearance of the microphone icon from the top bar indicates completion and the transcribed text can be pasted from the clipboard. On slower systems there may be a slight delay after the microphone icon disappears and before the text reaches the clipboard due to longer transcription time. On my computer, via the whisper.cpp server API, it is less than 150 ms (300 ms with local whisper.cpp) for an average paragraph of spoken text.
 
-For keyboard-only operation, with the standard `CTRL+V` for example, the standard clipboard will be used under X11 and Wayland (`wsi -c` or `wsiml -c`), while `wsi` (or `wsiml`) uses the PRIMARY sellection and text is pasted with the middle mouse button). For left-hand paste, speech recording can be relegated to hotkeys triggered with the right hand. For example I have setup the unused "+" and "Insert" keys on the numeric keypad. 
+For keyboard-only operation, with the standard `CTRL+V` for example, the standard clipboard will be used under X11 and Wayland (`wsi` or `wsiml`), while `wsi -p` (or `wsiml -p`) uses the PRIMARY sellection and text is pasted with the middle mouse button). For left-hand paste, speech recording can be relegated to hotkeys triggered with the right hand. ** For example I have setup the unused "+" (START RECORDING) and "Insert" (STOP RECORDING) keys on the numeric keypad. 
 
 <details>
 <summary>DATAFLOW DIAGRAMS</summary>
@@ -49,7 +52,7 @@ For keyboard-only operation, with the standard `CTRL+V` for example, the standar
 #### PREREQUISITES:
 - zsh or bash command line shell installation on a Linux system running any modern desktop environment.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN/localhost (see network-transcription [section](./API_TRANSCRIBE.md)), or optionally a  [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main)  whisperfile.
-- The orchestrator tool **wsi** or **wsiml** from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH** (The installation script `install-wsi` handles most of these).  
+- The orchestrator tool **wsi**, **wsiAI** or **wsiml** from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH** (The installation script `install-wsi` handles most of these).  
 - recent versions of 'sox', 'xsel' (or 'wl-copy' on Wayland) command-line tools from your system's repositories.
 -  A working microphone 
 > *DISCLAIMER: The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. The proposed actions and automations (e.g. installation locations etc.) are merely suggestions and are based on the author's choice and opinion. As they may not fit the taste or the particular situation of everyone, please, adjust as needed.*
@@ -59,24 +62,25 @@ In a folder of your choice, clone the BlahST repository and then choose an insta
 
 ```
 git clone https://github.com/QuantiusBenignus/BlahST.git
+cd ./BlahST
 ```
 
 <details>
 <summary>USING THE INSTALLATION SCRIPT</summary>
-Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the script and make it executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also download and setup a whisperfile of your choice if you select that option.
-The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` or `wsiml`
-Run the script `wsi` or `wsiml` directly from the command line first to verify its proper operation. Later it will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
+Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
+The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` and/or `wsiAI`, `wsiml`
+Run the script `wsi` or `wsiAI` or`wsiml` directly from the command line first to verify its proper operation. Later it will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 </details>
 <details>
 <summary>MANUAL INSTALLATION</summary>
 
 *(Assuming whisper.cpp is installed and the "main" executable compiled with 'make' in the cloned whisper.cpp repo. See Prerequisites section)*
-* Place the script **wsi** and/or **wsiml** in $HOME/.local/bin/
+* Place the script **wsi** and/or **wsiAI**, **wsiml** in $HOME/.local/bin/
 * Make it executable
   ```
-  cd $HOME/.local/bin; chmod +x wsi
+  cd $HOME/.local/bin; chmod +x wsi wsiAI wsiml
   ```
-* Run once from the command line to let the script check for required dependencies
+* Run once from the command line to let the scripts check for required dependencies
 * If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory.
   For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
 ```
@@ -107,22 +111,22 @@ To start and stop speech input, for both manual and automatic installation
 * Under "Keyboard shortcuts", "View and customize shortcuts"
 * In the new window, scroll down to "Custom Shortcuts" and press it.
 * Press "+" to add a new shortcut and give it a name: "Start Recording Speech"
-* In the "Command" field type `/home/yourusername/.local/bin/wsi` for using the middle mouse button or change it to `.../wsi -c` for using the clipboard.
-* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
-* Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+a
+* In the "Command" field type `/home/yourusername/.local/bin/wsi -p` for using the middle mouse button or change it to `.../wsi` for using the clipboard.
+* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
+* Then press "Set Shortcut" and select a (unused) key combination. For example a key combo like **CTRL+ALT+a** or a single unused key like **KP+** (keypad +).
 * Click Add and you are done. 
 
 The orchestrator script has a silence detection filter in the call to sox (rec) and would stop recording (in the best case) on 2 seconds of silence.
 In addition, if one does not want wait or has issues with the silence detection threshold:
 
-##### Manual speech recording interuption
+##### Manual speech recording interuption (strongly recommended)
 For those who want to be able to interupt the recording manually with a key combination, in the spirit of great hacks, we are going to use the system built-in features:
 * Open your GNOME system settings and again, find "Keyboard".
 * Under "Keyboard shortcuts", "View and customize shortcuts"
 * In the new window, scroll down to "Custom Shortcuts" and press it.
 * Press "+" to add a new shortcut and give it a name: "Interupt Speech Input!"
 * In the "Command" field type `pkill --signal 2 rec`
-* Then press "Set Shortcut" and select a (unused) key combination. For example CTRL+ALT+x
+* Then press "Set Shortcut" and select a (unused) key combination. For example a key combo like **CTRL+ALT+x** or a single unused key like **KP-** (keypad -).
 * Click Add and you are done.
   
 That Simple.  Just make sure that the new key binding has not been set-up already for something else.
@@ -136,11 +140,11 @@ This is simalr to the GNOME setup above (for reference, see its more detailed in
 * Open the Xfce4 Settings Manager.
 * Navigate to Keyboard → Application Shortcuts.
 * Click on the Add button to create a new shortcut.
-* Enter the name of the shortcut and the command e.g. `/home/yourusername/.local/bin/wsi`  or `.../wsi -c` for using the clipboard.
-* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
+* Enter the name of the shortcut and the command e.g. `/home/yourusername/.local/bin/wsi -p`  or `.../wsi` for using the clipboard.
+* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Press the keys you wish to assign to the shortcut.
 * Click OK to save the shortcut.
- The hotkey to stop speech recording should be done similarly with `pkill --signal 2 rec`.
+ The hotkey to stop speech recording should be done similarly with another key combo and the command `pkill --signal 2 rec`.
 </details>
 
 <details>
@@ -155,11 +159,11 @@ This is similar to the GNOME setup above (for reference, see its more detailed i
 * Under the newly created group, click on New again and select Global Shortcut -> Command/URL.
 * Give your new shortcut a name.
 * Choose the desired shortcut key combination by clicking on the button next to "None" and pressing the keys you want to assign to the shortcut.
-* In the Trigger tab, specify the command to be executed when the shortcut is triggered. e.g. `/home/yourusername/.local/bin/wsi` or `.../wsi -c`
-* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -c -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
+* In the Trigger tab, specify the command to be executed when the shortcut is triggered. e.g. `/home/yourusername/.local/bin/wsi` or `.../wsi -p`
+* (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Ensure that the Enabled checkbox is checked to activate the shortcut.
 * Apply the changes by clicking Apply or OK.
-The hotkey to stop speech recording should be done similarly with `pkill --signal 2 rec`. 
+The hotkey to stop speech recording should be done similarly with another key combo and the command `pkill --signal 2 rec`. 
 </details>
 
 Please, note that there may be slight variations in the above steps depending on the version installed on your system.
@@ -170,14 +174,14 @@ Please, consult the documentation for your systems desktop environment.
 - [ ] POSIX compliant orchestration scripts
 
 #### SUMMARY
-* On the press of a hotkey combo, the `wsi` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
+* On the press of a hotkey combo, the `wsi -p` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense.) 
 
-* If using `wsi -c` (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
+* If using `wsi` with no flags (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
 Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual. (For most people, right-hand hotkeys would work well.)
 
-* If transcribing over the network with `wsi -n -c` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
-  It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (to paste with the middle mouse button use `wsi -n` instead).
+* If transcribing over the network with `wsi -n` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
+  It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (to paste with the middle mouse button use `wsi -n -p` instead).
 * If using a whisperfile instead of, or in addition to a compiled whisper.cpp, invoke with `wsi -w ...` and the script will use the preset actually portable executable with the embedded whisper model of choice.  
 * For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle assign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
