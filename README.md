@@ -27,6 +27,7 @@ The work is done by one of the scripts:
 - *wsi* for general speech input, 
 - *wsiml* for multilingual users,
 - *wsiAI* for users who want to also speak with a local large language model using llama.cpp or a llamafile.
+  
 Speech recognition is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN or localhost.
 Alternativelly, you can choose to simply download and use an actually portable executable (with an embedded whisper model) [whisperfile](https://huggingface.co/Mozilla/whisperfile/tree/main), now part of the [llamafile](https://github.com/Mozilla-Ocho/llamafile) repository. 
 
