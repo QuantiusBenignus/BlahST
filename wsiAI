@@ -35,34 +35,37 @@ NTHR=8
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 # Use clipboard to paste from unless PRIMESEL set to true to use PRIMARY selection (middle mouse button to paste): 
 PRIMESEL=false
-# Default whisper.cpp model file for local ASR inference (base.en provides excellent WER for English only)
-#WMODEL="$TEMPD/ggml-base.en.bin"
-WMODEL=${WHISPER_DMODEL:-"$HOME/AI/Models/whisper/ggml-base.en.bin"}
-# Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
-WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
-#Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
-LLMODEL="$HOME/AI/Models/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
-#Use the following LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
-LIGHTLMODEL="$HOME/AI/Models/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
-#Default llama.cpp executable:
-llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
-#Uncomment the following to use a LLM from a llammafile (also needs flag -a) instead of standalone llamma.cpp:
-#LLAMAFILE="$HOME/AI/Models/gemma-2-2b-it.Q6_K.llamafile"
-LLAMAFILE="llamafile-0.8.16" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.8.16
-#Use the following text-to-speech Piper model for human-like audio response in English:
-TTSMODEL="$HOME/AI/Models/piper/en_US-lessac-low.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
-#The above TTS model has sample rate 16000 (if you change the model, adjust the sample rate below):
-rtts="16000" 
-#Use the following text-to-speech Piper model for human-like audio response in the language (e.g. chinese) of the LLM translator function:
-TRANSMODEL="$HOME/AI/Models/piper/zh_CN-huayan-medium.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
-#The above model has sample rate 22050 (if you change it, adjust the sample rate below):
-rtrans="22050" 
 # Try to paste automatically on completed transcription, reqires xdotool and such:
 AUTOPASTE=true
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
 #(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
 WHOST="127.0.0.1"
 WPORT="58080"             
+
+#The superdirectory where AI models (Whisper, LLMs, TTS etc.) are stored (adjust as needed):
+AI="$HOME/REPLACE_W_PATH_TO/Models"
+# Default whisper.cpp model file for local ASR inference (base.en provides excellent WER for English only)
+#WMODEL="$TEMPD/ggml-base.en.bin"
+WMODEL=${WHISPER_DMODEL:-"$AI/whisper/ggml-base.en.bin"}
+# Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
+WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
+#Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
+LLMODEL="$AI/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
+#Use the following LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
+LIGHTLMODEL="$AI/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
+#Default llama.cpp executable:
+llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
+#Uncomment the following to use a LLM from a llammafile (also needs flag -a) instead of standalone llamma.cpp:
+LLAMAFILE="$AI/gemma-2-2b-it.Q6_K.llamafile"
+#LLAMAFILE="llamafile-0.8.16" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.8.16
+#Use the following text-to-speech Piper model for human-like audio response in English:
+TTSMODEL="$AI/piper/en_US-lessac-low.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
+#The above TTS model has sample rate 16000 (if you change the model, adjust the sample rate below):
+rtts="16000" 
+#Use the following text-to-speech Piper model for human-like audio response in the language (e.g. chinese) of the LLM translator function:
+TRANSMODEL="$AI/piper/zh_CN-huayan-medium.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
+#The above model has sample rate 22050 (if you change it, adjust the sample rate below):
+rtrans="22050" 
 #---END USER CONFIG BLOCK------------------------------------------------------------------------
 
 #Notification code, prefers zenity, then notify-send, which should be available across the
@@ -117,6 +120,13 @@ elif [[ wm == "X11" ]]; then
        command -v xdotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install xdotool" >&2 ; exit 1 ; }
     fi
 fi
+#Check USER configuration vars:
+for llv in $WMODEL $LLMODEL $LIGHTMODEL $TTSMODEL $TRANSMODEL
+do
+[[ -f $llv ]] || { desknote "File not found: " "$llv was not found. \nPlease, adjust in USER CONFIGURATION BLOCK." ; exi1 1 ; }
+done 
+command -v $LLAMAFILE &>/dev/null || { desknote "Not found: " "Executable $LLAMAFILE not found." ; exit 1 ; }
+command -v $WHISPERFILE &>/dev/null || { desknote "Not found: " "Executable $WHISPERFILE not found." ; exit 1 ; }
 echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n"
 desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
 To remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n \
