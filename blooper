@@ -23,7 +23,7 @@ wm="$XDG_SESSION_TYPE"
 #wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
 
 #---USER CONFIGURATION BLOCK----------------------------------------------------------------------
-#Please, adjust the variables here to suit your environment:
+#PLEASE, ADJUST THE VARIABLES HERE TO SUIT YOUR ENVIRONMENT:
 # Store temp files in memory for speed and to reduce SSD/HDD "grinding":
 TEMPD='/dev/shm'
 # Hardcoded temp wav file to store the speech audio and get overwritten every time (in RAM):
@@ -32,11 +32,14 @@ ramf="$TEMPD/wfile"
 NTHR=8
 #It seems that the optimum number of transcribe threads should equal half CPU processing cores:
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
-# Default whisper.cpp model file for ASR inference (base.en provides excellent WER for English only)
+
+#Model superdirectory where AI models (Whisper, LLMs, TTS etc.) are stored (mostly needed for wsiAI):
+AI=$HOME/PATH_TO_YOUR/Models
+# Default whisper.cpp model file for ASR inference (with local whisper.cpp, possibly whisperfile):
 #WMODEL="$TEMPD/ggml-base.en.bin"
-WMODEL=${WHISPER_DMODEL:-"$HOME/AI/Models/whisper/ggml-base.en.bin"}
-# Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
-WHISPERFILE="whisper-tiny.en.llamafile" 
+WMODEL=${WHISPER_DMODEL:-"$AI/whisper/ggml-base.en.bin"}
+# Uncomment to use available whisperfile (downloaded to a folder in the PATH and set to EXECUTABLE):
+#WHISPERFILE="whisper-tiny.en.llamafile" 
 #Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
 #(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
 WHOST="127.0.0.1"
@@ -64,6 +67,28 @@ desknote() {
         echo "  sudo pacman -S zenity, etc." >&2
     fi
 }
+
+#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
+command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
+command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
+[[ -n $WHISPERFILE ]] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
+ 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
+#Now let's check if we are in X11 or Wayland and use the right utility:
+if [[ wm == "wayland" ]]; then
+    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
+    command -v ydotool &>/dev/null || { echo "ydotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
+elif [[ wm == "X11" ]]; then
+    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
+    command -v xdotool &>/dev/null || { echo "xdotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
+fi
+[[ -f $WMODEL ]] || { desknote "File not found: " "$WMODEL was not found. \nPlease, correct in USER CONFIGURATION BLOCK." ; exi1 1 ; }
+[[ -n $WHISPERFILE ]] && { [[ -x $WHISPERFILE ]] || desknote "Not found: " "Executable $WHISPERFILE not found." ; exit 1 ; }
+echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n"
+desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
+To remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n \
+\nYou can run blooper --help from the Terminal to learn about its options..."
+#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
 
 # Process command line arguments first
 while [ $# -gt 0 ]; do
@@ -102,26 +127,6 @@ while [ $# -gt 0 ]; do
             ;;
     esac
 done
-
-#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
-command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
-command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-[ -n $whf ] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
-\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
- 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
-#Now let's check if we are in X11 or Wayland and use the right utility:
-if [[ wm == "wayland" ]]; then
-    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
-    command -v ydotool &>/dev/null || { echo "ydotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
-elif [[ wm == "X11" ]]; then
-    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
-    command -v xdotool &>/dev/null || { echo "xdotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
-fi
-echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n"
-desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
-To remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n \
-\nYou can run blooper --help from the Terminal to learn about its options..."
-#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
 
 #Hear the complaints of the above tools and do not continue with the sequence:
 set -e
