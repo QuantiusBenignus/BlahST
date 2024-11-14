@@ -26,9 +26,6 @@ wm="$XDG_SESSION_TYPE"
 #Please, adjust the variables here to suit your environment:
 # Store temp files in memory for speed and to reduce SSD/HDD "grinding":
 TEMPD='/dev/shm'
-# Default whisper.cpp model file for ASR inference (with local whisper.cpp, possibly whisperfile):
-#WMODEL="$TEMPD/ggml-base.en.bin"
-WMODEL=${WHISPER_DMODEL:-"$HOME/AI/Models/whisper/ggml-base.en.bin"}
 # Hardcoded temp wav file to store the voice memo and get overwritten every time (in RAM):
 ramf="$TEMPD/wfile"
 #Set the number of processing threads for whisper.cpp inference (adjust for your case):
@@ -37,7 +34,13 @@ NTHR=8
 #NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
 # Use CLIPBOARD unless primary selection (middle mouse button to paste) selected (change here to true or via CLI flag -p): 
 PRIMESEL=false
-# Uncomment to use available whisperfile (downloaded to a folder in the PATH and set to executable):
+
+#Model superdirectory where AI models (Whisper, LLMs, TTS etc.) are stored (mostly needed for wsiAI):
+AI=$HOME/PATH_TO_YOUR/Models
+# Default whisper.cpp model file for ASR inference (with local whisper.cpp, possibly whisperfile):
+#WMODEL="$TEMPD/ggml-base.en.bin"
+WMODEL=${WHISPER_DMODEL:-"$AI/whisper/ggml-base.en.bin"}
+# Uncomment to use available whisperfile (downloaded to a folder in the PATH and set to EXECUTABLE):
 # WHISPERFILE=whisper-tiny.en.llamafile 
 # (For the next one needs xdotool (X11) or ydotool (Wayland).
 # Change to 'true' to paste automatically on completed transcription (using 'xdotool'):
@@ -74,7 +77,7 @@ desknote() {
 #The install-wsi script should have taken care of this, left here for the manual install.
 command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
 command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-[ -n $WHISPERFILE ] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
+[[ -n $WHISPERFILE ]] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
 \nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
  'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
 # We will use zenity or notify-send (part of libnotify or libnotify-bin in some distros) for desktop notifications:
@@ -91,6 +94,12 @@ elif [[ wm == "X11" ]]; then
        command -v xdotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install xdotool" >&2 ; exit 1 ; }
     fi
 fi
+[[ -f $WMODEL ]] || { desknote "File not found: " "$WMODEL was not found. \nPlease, correct in USER CONFIGURATION BLOCK." ; exi1 1 ; }
+[[ -n $WHISPERFILE ]] && { [[ -x $WHISPERFILE ]] || desknote "Not found: " "Executable $WHISPERFILE not found." ; exit 1 ; }
+echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsi script.\n"
+desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
+To remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsi script.\n \
+\nYou can run wsi --help from the Terminal to learn about its options..."
 #---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
 
 # Process command line arguments first
