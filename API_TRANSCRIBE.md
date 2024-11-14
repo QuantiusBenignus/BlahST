@@ -1,12 +1,14 @@
 # Network Transcription (recommended mode)
-Aside from being useful for Linux systems that do not have the power to transcribe speech efficiently, this mode also shows speedup of local transcription on faster machines which run a whisper.cpp server on localhost. See below.
+This mode:
+- Allows older or less capable Linux systems (e.g. Raspberry PI with a microphone) to offload the speech recognition to a more powerful computer over the network. 
+- Also shows speedup of local transcription on faster machines which run a whisper.cpp server on localhost. See below.
 
 ### Setup
 Speech is recorded on the local machine and sent via an API call, to a whisper.cpp [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server), typically on the local network or at localhost (127.0.0.1).
 
-* To make BlahST work in network transcription mode, one should use the `wsi` or `wsiml` script with `-n` flag when setting up keyboard shortcuts for speech input.
+* To make BlahST work in network transcription mode, one should use the `wsi`, `wsiAI`, or `wsiml` script with `-n` flag when setting up keyboard shortcuts for speech input.
 
-* **wsi** and **wsiml** can be found in this repository and should be placed in $HOME/.local/bin. 
+* **wsi**, **wsiAI** and **wsiml** can be found in this repository and should be placed in $HOME/.local/bin. 
 
 * The IP/hostname and port number for the server should be entered in the configuration block of the script.
 
@@ -14,7 +16,7 @@ Speech is recorded on the local machine and sent via an API call, to a whisper.c
 
 * Please, run the script of choice from the command line first to check for its dependencies and have them installed.
 
-When **wsi** or **wsiml** is properly set up, BlahST will work the same way as with local instance of whisper.cpp. Likely faster.
+When **wsi**, **wsiAI**, or **wsiml** is properly set up, BlahST will work the same way as with local instance of whisper.cpp. Likely faster.
 Just keep in mind that for speech input in multiple languages and the ability to translate (use **wsiml**) the server will need to run with a multilingual model file (no .en in the filename), at least ggml-small.bin is recommended for adequate results.
 
 ## Signifficant Speedup
@@ -39,7 +41,7 @@ This is almost **90x-faster-than-real-time** (~140 ms for a 12.5s speech clip). 
 Seems like there is extra advantage to running a local server with the model preloaded.
 
 Seeing this consistently, I would recommend using this **client - server** mode of operation with BlahST. 
-Just use the `wsi` script with `-n` flag (or supply a custom `ip:port` or `hostname:port` pair as the first argument), which makes a call to whisper.cpp **server** (server should be compiled along with main in your whisper.cpp repo).
+Just use the `wsi..` scripts with `-n` flag (or supply a custom `ip:port` or `hostname:port` pair as the first argument), which makes a call to whisper.cpp **server** (server should be compiled along with main in your whisper.cpp repo).
 The server instance must be started on login (on a local machine) or otherwise available on your LAN. 
 
 ##### Caveats:
