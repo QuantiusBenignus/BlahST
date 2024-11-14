@@ -7,9 +7,9 @@
 - **Able to select speech input language and translate from the command line with the dedicated `wsiml` script**
 - **Instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
 - **NEW: Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** (TODO: A dedicated documentation section describing the AI assistant functions)
-- **HOT, EXPERIMENTAL: The new utility blooper allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
+- **HOT, EXPERIMENTAL: The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
      
-Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some upcoming features (AI translator and assistant, in testing stage):
+Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some local LLM features (AI assistant, translator, scheduller, CLI guide in testing stage):
 
 https://github.com/user-attachments/assets/877c699d-cf8b-4dd2-bc0e-75dee9054cf2
 
@@ -21,13 +21,14 @@ https://github.com/user-attachments/assets/c3842318-14cb-4874-8651-7bc92abd187f
 _The above video (unmute please) demonstrates the use of blooper, modified from wsi to transcribe in a loop, until the user terminates speech input with a longer pause (~3sec as preset). With the use of xdotool (or ydotool for Wayland users), text is pasted automatically on any pause (or on hotkey interuption). For the video above, the speech is generated with a synthetic voice and collected by the microphone. This allows me to edit the text concurrently (multitaskers, don't try this at home:). At the end, the top-bar microphone icon should disappear, indicating program exit. It does not happen in the video because the screencast utility has a claim on the icon too._
 
 ### Principle of Operation (_the best UI is no UI at all._)
-The idea with BlahST is to be the UI-free software equivalent of a Mongol raid; short and powerfull burst of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp which dumps transcribed text into the clipboard (unless you pass it by an AI before that). An universal approach that should work in most Linux desktop environments and distributions.
+The idea with BlahST is to be the UI-free software equivalent of a Mongol raid; short and powerfull burst of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp [[server]](./API_TRANSCRIBE.md) which dumps transcribed text into the clipboard (unless you pass it by a local LLM before that). An universal approach that should work in most Linux desktop environments and distributions.
 
 The work is done by one of the scripts:
 - *wsi* for general speech input, 
 - *wsiml* for multilingual users,
 - *wsiAI* for users who want to also speak with a local large language model using llama.cpp or a llamafile.
-  
+
+
 Speech recognition is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN or localhost.
 Alternativelly, you can choose to simply download and use an actually portable executable (with an embedded whisper model) [whisperfile](https://huggingface.co/Mozilla/whisperfile/tree/main), now part of the [llamafile](https://github.com/Mozilla-Ocho/llamafile) repository. 
 
@@ -97,10 +98,10 @@ chmod +x whisper-tiny.en.llamafile
 </details>
  
 #### CONFIGURATION
-##### For manual installation only:
-Inside the `wsi` or `wsiml` script, near the begining, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables (described in the following section) have been collected. 
-Most can be left as is but the important ones are the location of the whisper.cpp model file that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
-If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` 
+
+Inside the `wsi`, `wsiAI`, `wsiml` or `blooper` script, near the beginning, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables have been collected. 
+Most can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
+If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded executable whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` (must be in the $PATH). 
 
 ##### GUI SETUP OF HOTKEYS
 To start and stop speech input, for both manual and automatic installation
