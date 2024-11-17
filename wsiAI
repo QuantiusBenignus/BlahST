@@ -53,6 +53,8 @@ WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/M
 LLMODEL="$AI/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
 #Use the following LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
 LIGHTLMODEL="$AI/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
+#Use the following heavy hitter for tasks that require more advanced reasoning (slower):
+HEAVYMODEL="$AI/Qwen2.5-14B-Instruct-Q5_K_L.gguf" # available from https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF
 #Default llama.cpp executable:
 llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
 #Uncomment the following to use a LLM from a llammafile (also needs flag -a) instead of standalone llamma.cpp:
@@ -114,14 +116,14 @@ if [[ wm == "wayland" ]]; then
     if [ "$AUTOPASTE" = true ]; then 
        command -v ydotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install ydotool" >&2 ; exit 1 ; }
     fi
-elif [[ wm == "X11" ]]; then
+elif [[ wm == "x11" ]]; then
     command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
     if [ "$AUTOPASTE" = true ]; then 
        command -v xdotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install xdotool" >&2 ; exit 1 ; }
     fi
 fi
 #Check USER configuration vars:
-for llv in $WMODEL $LLMODEL $LIGHTMODEL $TTSMODEL $TRANSMODEL
+for llv in $WMODEL $LLMODEL $LIGHTMODEL $HEAVYMODEL $TTSMODEL $TRANSMODEL
 do
 [[ -f $llv ]] || { desknote "File not found: " "$llv was not found. \nPlease, adjust in USER CONFIGURATION BLOCK." ; exi1 1 ; }
 done 
@@ -252,8 +254,25 @@ if [ -n "$ZSH_NAME" ]; then
      $llamf -t $NTHR -c 1024 --temp 0 -ngl 99 -n 80 -m $LLMODEL --no-display-prompt --prompt "Respond only with the chinese translation, written in chinese only, and nothing more. Translate the following to chinese: $str" 2>/dev/null | sed 's/\*//g; s/\[end of text\]//g' | tee /dev/tty /dev/shm/lmf | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
      str="${$(< /dev/shm/lmf)//$'\n'/}"
    elif [[ "$str" == [Cc]omputer*  ]]; then
-     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
-     str="${strai/\[end of text\]}"
+     if [[ $str == *Grammarly* || $str == *proofread* ]]; then
+        if [[ wm == "x11" ]]; then
+            selpaste="$(xsel --primary --output)"
+        elif [[ wm == "wayland" ]]; then
+            selpaste="$(wl-paste --primary --type text)"
+        else
+            #X11 fallback
+            selpaste="$(xsel --primary --output)"
+        fi
+        str='<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\nBehave like Grammarly on this, by simply providing only the corrected text and nothing else, no explanations, no markdown, etc.: '
+        strai=$($llamf -t $NTHR -c 4096 --temp 0 -ngl 99 -mli --no-display-prompt -m $HEAVYMODEL --prompt "$str$selpaste<|im_end|>\n<|im_start|>assistant\n" 2>/dev/null )
+        strai="${strai//\*/}"
+        str="${strai/\[end of text\]}"
+     else
+        strai=$($llamf -t $NTHR -c 256 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a Linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
+        # | sed 's/[`\*]//g' )
+        strai="${strai//\*/}"
+        str="${strai/\[end of text\]}"
+     fi
    elif [[ "$str" == [Cc]oordinator*  ]]; then
      strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
      str="${strai/\[end of text\]}"
@@ -275,8 +294,25 @@ elif [ -n "$BASH" ]; then
      str="$(< /dev/shm/lmf)"
      str=${str#*(+([![:space:]]))}
    elif [[ "$str" == [Cc]omputer*  ]]; then
-     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null | sed 's/[`\*]//g' )
-     str="${strai/\[end of text\]}"
+     if [[ $str == *Grammarly* || $str == *proofread* ]]; then
+        if [[ wm == "x11" ]]; then
+            selpaste="$(xsel --primary --output)"
+        elif [[ wm == "wayland" ]]; then
+            selpaste="$(wl-paste --primary --type text)"
+        else
+            #X11 fallback
+            selpaste="$(xsel --primary --output)"
+        fi
+        str='<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\nBehave like Grammarly on this, by simply providing only the corrected text and nothing else, no explanations, no markdown, etc.: '
+        strai=$($llamf -t $NTHR -c 4096 --temp 0 -ngl 99 -mli --no-display-prompt -m $HEAVYMODEL --prompt "$str$selpaste<|im_end|>\n<|im_start|>assistant\n" 2>/dev/null )
+        strai="${strai//\*/}"
+        str="${strai/\[end of text\]}"
+     else
+        strai=$($llamf -t $NTHR -c 256 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a Linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
+        # | sed 's/[`\*]//g' )
+        strai="${strai//\*/}"
+        str="${strai/\[end of text\]}"
+     fi
    elif [[ "$str" == [Cc]oordinator*  ]]; then
      strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
      str="${strai/\[end of text\]}"
