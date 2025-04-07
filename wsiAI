@@ -18,6 +18,7 @@
 #  - optional llama.cpp or llamafile (and models) for AI assistant/translator functionality.
 #  - optional xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
 #  - Piper neural text-to-speech engine for spoken AI assistant response 
+#  - optional Chrome browser version which understands the @gemini omnibox shortcut
 #--------------------------------------------------------------------------
 #X11 or Wayland (2nd line may catch edge cases):
 wm="$XDG_SESSION_TYPE"
