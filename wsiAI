@@ -18,7 +18,6 @@
 #  - optional llama.cpp or llamafile (and models) for AI assistant/translator functionality.
 #  - optional xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
 #  - Piper neural text-to-speech engine for spoken AI assistant response 
-#  - optional Chrome browser version which understands the @gemini omnibox shortcut
 #--------------------------------------------------------------------------
 #X11 or Wayland (2nd line may catch edge cases):
 wm="$XDG_SESSION_TYPE"
@@ -135,37 +134,6 @@ desknote "Dependencies installed" "\nLooks like you have all dependencies instal
 To remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n \
 \nYou can run wsiAI --help from the Terminal to learn about its options..."
 #---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
-
-chrome_gemini_inject() {
-  local query="$1"
-  if ! pidof -q chrome; then
-    echo "Chrome Not Running" "Attempting to start Chrome..."
-    /usr/bin/google-chrome-stable --disable-breakpad --disable-extensions --no-referrers --no-pings --disable-background-networking --disable-background-mode --disable-sync --disable-preconnect --dns-prefetch-disable --multi-profiles --user-data-dir=/home/u1/.config/chromesoft --disable-3d-apis --reset-variation-state --enable-features=MarkHttpAs,NoScriptPreviews &
-    sleep 1
-    if ! pidof -q chrome; then
-      notify-send "Failed to Start" "Failed to start Chrome. Please check your installation."
-      return 1
-    fi
-  fi  
-  chromewid=$(xdotool search --maxdepth 2 --limit 1 --onlyvisible --class --classname --name "Chrome")
-  if [[ -z "$chromewid" ]]; then
-    notify-send "Not Found" "Could not find a Chrome window."
-    return 1
-  fi
-  xdotool windowactivate "$chromewid"
-  sleep 0.2
-  xdotool key ctrl+l
-  echo -n '@gemini' | xsel -ib
-  sleep 0.1
-  xdotool key ctrl+V
-  sleep 0.1
-  xdotool key space
-  sleep 0.1
-  echo "$query" | xsel -ib
-  xdotool key ctrl+V
-  sleep 0.1 
-  return 0
-}
 
 #Hear the complaints of the above tools and do not continue with the sequence:
 set -e
@@ -309,10 +277,6 @@ if [ -n "$ZSH_NAME" ]; then
    elif [[ "$str" == [Cc]oordinator*  ]]; then
      strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
      str="${strai/\[end of text\]}"
-   elif [[ $str == *[Gg]emini* ]]; then 
-     str=${str#*emini(, | |! )}
-     chrome_gemini_inject "${str}"
-     AUTOPASTE=0
    fi
 elif [ -n "$BASH" ]; then
    #Running in bash because you changed the shebang on line 1
@@ -353,10 +317,6 @@ elif [ -n "$BASH" ]; then
    elif [[ "$str" == [Cc]oordinator*  ]]; then
      strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
      str="${strai/\[end of text\]}"
-   elif [[ $str == *[Gg]emini* ]]; then 
-     str=${str#*emini(, | |! )}
-     chrome_gemini_inject "${str}"
-     AUTOPASTE=0
    fi
 else
     #Not testing for AI input if shell is unknown:
