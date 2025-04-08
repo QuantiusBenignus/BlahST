@@ -1,5 +1,5 @@
 #!/usr/bin/zsh
-#You can replace the shell above with bash, some effort is made to support both shells.
+# You can replace the shell above with bash, some effort is made to support both shells.
 # Copyright (c) 2024 Quantius Benignus
 # 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -28,7 +28,7 @@ wm="$XDG_SESSION_TYPE"
 # Store temp files in memory for speed and to reduce SSD/HDD "grinding":
 TEMPD='/dev/shm'
 # Hardcoded temp wav file to store the speech audio and get overwritten every time (in RAM):
-ramf="$TEMPD/wfile"
+ramf="$TEMPD/wfile-$USER"
 #Set the number of processing threads for whisper.cpp inference (adjust for your case):
 NTHR=8
 #It seems that the optimum number of transcribe threads should equal half CPU processing cores:
@@ -51,15 +51,15 @@ WMODEL=${WHISPER_DMODEL:-"$AI/whisper/ggml-base.en.bin"}
 WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
 #Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
 LLMODEL="$AI/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
-#Use the following LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
+#Use a LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
 LIGHTLMODEL="$AI/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
-#Use the following heavy hitter for tasks that require more advanced reasoning (slower):
+#Use a larger LLM for tasks that require more advanced capabilities (slower):
 HEAVYMODEL="$AI/Qwen2.5-14B-Instruct-Q5_K_L.gguf" # available from https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF
 #Default llama.cpp executable:
 llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
 #Uncomment the following to use a LLM from a llammafile (also needs flag -a) instead of standalone llamma.cpp:
 LLAMAFILE="$AI/gemma-2-2b-it.Q6_K.llamafile"
-#LLAMAFILE="llamafile-0.8.16" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.8.16
+#LLAMAFILE="llamafile-0.9.2" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.9.2
 #Use the following text-to-speech Piper model for human-like audio response in English:
 TTSMODEL="$AI/piper/en_US-lessac-low.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
 #The above TTS model has sample rate 16000 (if you change the model, adjust the sample rate below):
@@ -183,7 +183,6 @@ while [ $# -gt 0 ]; do
             echo -e 'Speaking: "Assistant,..." followed by a question, will trigger the AI model response and that will be available for pasting'
             echo -e 'Speaking: "Computer,..." followed by a request, will make the LLM attempt to deliver a Linux command that matches the request'
             echo -e 'Speaking: "Coordinator,..." followed by a task, will make the LLM respond with the task formatted as a TODO item, as in Joplin inline TODOs'
-            echo -e 'Speaking: "Hey Gemini,..." followed by a question, will attempt to send the question to Google Gemini, using an instance (possibly open) of the Chrome browser.'
             echo -e 'Saying: "Translator,..." followed by a statement, will make the AI model translate the statement and the translation willl be available for pasting'
             echo -e "The AI functions are experimental and work in progress." 
             echo -e "\nCAUTION: Transfering any AI-generated Linux commands to your command line is at your own risk. Make sure you know what you are doing."
