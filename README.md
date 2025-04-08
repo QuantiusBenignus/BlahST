@@ -9,7 +9,6 @@
 - **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** (TODO: A dedicated documentation section describing the AI assistant functions)
 - **EXPERIMENTAL: The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
-- **NEW: Ask Google's Gemini AI a spoken question using an instance of the Chrome browser. Will open a browser if no active instance found. Only the transcribed text is sent online.**
       
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some local LLM features (AI assistant, translator, scheduller, CLI guide in testing stage):
 
