@@ -243,7 +243,7 @@ if [ -n "$ZSH_NAME" ]; then
    if [[ "$str" == Assistant*  ]]; then
      str="${str#Assistant[,.] }"
      str="${str%'\n'}"
-     strai=$($llamf -t $NTHR -c 2048 --temp 0 -ngl 99 --no-display-prompt -n 150 -m $LIGHTLMODEL --prompt "Provide a concise response (but do not explain why is it concise) to the following: $str" 2>/dev/null )
+     strai=$($llamf -t $NTHR -c 2048 --temp 0 -ngl 99 --no-display-prompt -n 150 -m $LIGHTLMODEL -no-cnv --prompt "Provide a concise response (but do not explain why is it concise) to the following: $str" 2>/dev/null )
      strai="${strai/\[end of text\]}"
      echo "$strai" | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
      str="${(C)str}\n$strai" #We can still paste the result
@@ -251,7 +251,7 @@ if [ -n "$ZSH_NAME" ]; then
      echo $str
      str="${str#[Tt]ranslator[,. ] }"
      echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
-     $llamf -t $NTHR -c 1024 --temp 0 -ngl 99 -n 80 -m $LLMODEL --no-display-prompt --prompt "Respond only with the chinese translation, written in chinese only, and nothing more. Translate the following to chinese: $str" 2>/dev/null | sed 's/\*//g; s/\[end of text\]//g' | tee /dev/tty /dev/shm/lmf | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 1024 --temp 0 -ngl 99 -n 80 -no-cnv -m $LLMODEL --no-display-prompt --prompt "Respond only with the chinese translation, written in chinese only, and nothing more. Translate the following to chinese: $str" 2>/dev/null | sed 's/\*//g; s/\[end of text\]//g' | tee /dev/tty /dev/shm/lmf | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
      str="${$(< /dev/shm/lmf)//$'\n'/}"
    elif [[ "$str" == [Cc]omputer*  ]]; then
      if [[ $str == *Grammarly* || $str == *proofread* ]]; then
@@ -264,17 +264,17 @@ if [ -n "$ZSH_NAME" ]; then
             selpaste="$(xsel --primary --output)"
         fi
         str='<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\nBehave like Grammarly on this, by simply providing only the corrected text and nothing else, no explanations, no markdown, etc.: '
-        strai=$($llamf -t $NTHR -c 4096 --temp 0 -ngl 99 -mli --no-display-prompt -m $HEAVYMODEL --prompt "$str$selpaste<|im_end|>\n<|im_start|>assistant\n" 2>/dev/null )
+        strai=$($llamf -t $NTHR -c 4096 --temp 0 -ngl 99 -mli --no-display-prompt -no-cnv -m $HEAVYMODEL --prompt "$str$selpaste<|im_end|>\n<|im_start|>assistant\n" 2>/dev/null )
         strai="${strai//\*/}"
         str="${strai/\[end of text\]}"
      else
-        strai=$($llamf -t $NTHR -c 256 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a Linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
+        strai=$($llamf -t $NTHR -c 256 --temp 0 -ngl 99 --no-display-prompt -n 100 -no-cnv -m $LLMODEL --prompt "You are a Linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
         # | sed 's/[`\*]//g' )
         strai="${strai//\*/}"
         str="${strai/\[end of text\]}"
      fi
    elif [[ "$str" == [Cc]oordinator*  ]]; then
-     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
+     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt --simple-io -n 100 -no-cnv -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
      str="${strai/\[end of text\]}"
    fi
 elif [ -n "$BASH" ]; then
@@ -285,12 +285,12 @@ elif [ -n "$BASH" ]; then
    if [[ "$str" == ?[Aa]ssistant* ]]; then
      str="${str#?[Aa]ssistant[,.] }"
      str="${str^}"
-     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --prompt "Provide a very concise response to the following: $str"  --no-display-prompt -n 150 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -no-cnv -m $LIGHTLMODEL --prompt "Provide a very concise response to the following: $str"  --no-display-prompt -n 150 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
      str="$str\n"$(< /dev/shm/lmf) #We can still paste the result
    elif [[ "$str" == ?[Tt]ranslator* ]]; then
      str="${str#?[Tt]ranslator[,.] }"
      echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null
-     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -m $LIGHTLMODEL --no-display-prompt --prompt "Respond in chinese and be concise. Translate the following to chinese: $str"  -n 80 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
+     $llamf -t $NTHR -c 2048 --temp 0 2>/dev/null -ngl 999 -no-cnv -m $LIGHTLMODEL --no-display-prompt --prompt "Respond in chinese and be concise. Translate the following to chinese: $str"  -n 80 | tee /dev/tty /dev/shm/lmf | sed 's/\*//g' | piper --model $TRANSMODEL --output-raw 2>/dev/null | aplay -r $rtrans -f S16_LE -t raw - 2>/dev/null
      str="$(< /dev/shm/lmf)"
      str=${str#*(+([![:space:]]))}
    elif [[ "$str" == [Cc]omputer*  ]]; then
@@ -304,17 +304,17 @@ elif [ -n "$BASH" ]; then
             selpaste="$(xsel --primary --output)"
         fi
         str='<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n<|im_start|>user\nBehave like Grammarly on this, by simply providing only the corrected text and nothing else, no explanations, no markdown, etc.: '
-        strai=$($llamf -t $NTHR -c 4096 --temp 0 -ngl 99 -mli --no-display-prompt -m $HEAVYMODEL --prompt "$str$selpaste<|im_end|>\n<|im_start|>assistant\n" 2>/dev/null )
+        strai=$($llamf -t $NTHR -c 4096 --temp 0 -ngl 99 -mli --no-display-prompt -no-cnv -m $HEAVYMODEL --prompt "$str$selpaste<|im_end|>\n<|im_start|>assistant\n" 2>/dev/null )
         strai="${strai//\*/}"
         str="${strai/\[end of text\]}"
      else
-        strai=$($llamf -t $NTHR -c 256 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a Linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
+        strai=$($llamf -t $NTHR -c 256 --temp 0 -ngl 99 --no-display-prompt -n 100 -no-cnv -m $LLMODEL --prompt "You are a Linux command helper. To any request, you respond only with a precise linux command. Do not output any other text. Here is the request: $str" 2>/dev/null )
         # | sed 's/[`\*]//g' )
         strai="${strai//\*/}"
         str="${strai/\[end of text\]}"
      fi
    elif [[ "$str" == [Cc]oordinator*  ]]; then
-     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt -n 100 -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
+     strai=$($llamf -t $NTHR -c 512 --temp 0 -ngl 99 --no-display-prompt -n 100 -no-cnv -m $LLMODEL --prompt "You are a helpful scheduler. When I ask you to schedule a task, you will format it like this: - [ ] @TODO Task body. Let's give it a try: $str" 2>/dev/null )
      str="${strai/\[end of text\]}"
    fi
 else
