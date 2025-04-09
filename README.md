@@ -225,7 +225,11 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
 </details>
 
 ---
+#### Contributing
 
+- Could be as simple as starting a new discussion with an idea to expand the use case scenarios for BlahST. ( For example [use BlahST to ask Gemini questions](https://github.com/QuantiusBenignus/BlahST/discussions/13))
+- Or send a PR for a new feature that substantially enhances BlahST
+  
 #### Credits
 * Open AI (for [Whisper](https://github.com/openai/whisper))
 * Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggerganov/whisper.cpp))
