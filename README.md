@@ -193,20 +193,30 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 
 <details>
   <summary>TIPS AND TRICKS</summary>
+
+##### Sox silence detection
+
 Sox is recording in wav format at 16k rate, the only currently accepted by whisper.cpp. This is done in **wsi** with this command:
 `rec -t wav $ramf rate 16k silence 1 0.1 3% 1 2.0 6% `
-It will attempt to stop on silence of 2s with signal level threshold of 6%. A very noisy environment will prevent the detection of silence and the recording (of noise) will continue. This is a problem and a remedy that may not work in all cases is to adjust the duration and silence threshold in the sox filter in the `wsi` script. Of course, one can use the manual interuption method if preferred.
-
+Sox will attempt to stop on silence of 2s with signal level threshold of 6%. A very noisy environment will prevent the detection of silence and the recording (of noise) will continue. This is a problem and a remedy that may not work in all cases is to adjust the duration and silence threshold in the sox filter in the `wsi` script. Of course, one can use the manual interuption method if preferred.
 We can't raise the threshold arbitrarily because, if one consistently lowers their voice (fadeout) at the end of speech, it may get cut off if the threshold is high. Lower it in that case to a few %.    
 It is best to try to make the speech distinguishable from noise by amplitude (speak clearly, close to the microphone), while minimizing external noise (sheltered location of the microphone, noise canceling hardware etc.)
 With good speech signal level, the threshold can then be more effective, since SNR (speech-to-noise ratio:-) is effectively increased. 
-
 After the speech is captured, it will be passed to `transcribe` (whisper.cpp) for speech recognition. This will happen faster than real time (especially with a fast CPU or if your whisper.cpp installation uses CUDA). One can adjust the number of processing threads used by adding  `-t n` to the command line parameters of transcribe (please, see whisper.cpp documentation). 
 The script will then parse the text to remove non-speech artifacts, format it and send it to the PRIMARY selection (clipboard) using either X11 or Wayland tools. 
 
+##### Multilingual Support
 In principle, whisper (whisper.cpp) **is multilingual** and with the correct model file, this application will output UTF-8 text transcribed in the correct language. The `wsiml` script is dedicated to multi-lingual use and with it the user is able to choose the language for speech input (using the `-l LC` flag where LC is the language code) and can also translate the speech in the chosen input language to English with the `-t` flag. The user can assign multiple hotkeys to the various languages that they want to transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
-Please, note that when using the server mode, now you have 2 choices. You can have either the precompiled whisper.cpp server or the downloaded whisperfile (in server mode) listen at the preconfigured host and port number. The orchestrator script approaches them the same way.  
+Please, note that when using the server mode, now you have 2 choices. You can have either the precompiled whisper.cpp server or the downloaded whisperfile (in server mode) listen at the preconfigured host and port number. The orchestrator script approaches them the same way.
+
+##### Protecting the speech input hotkey from multiple invocations
+Sometimes, one can mistakenly press the hotkey dedicated to starting `wsi` ( or `wsiAI`, `blooper`, `blahstbot`) instead of the hotkey to stop recording, while the script is already running. This may create a resource utilization mess and is obviously not desired. A way to prevent it is to expand the command assigned to the hotkey from `blahstbot -n` (the chatbot command) to:
+
+```
+pidof -q blahstbot wsiAI || blahstbot -n
+```
+The chatbot utility is used as an example because this regime of operation (interactive speech-to-speech chat) is the most likely to suffer from user missuse the wrong hotkey, due to the increased frequency of use of these hotkeys during a chat.
 
 ##### Temporary directory and files
 Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
