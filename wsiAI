@@ -19,6 +19,8 @@
 #  - optional xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
 #  - Piper neural text-to-speech engine for spoken AI assistant response 
 #--------------------------------------------------------------------------
+#Above all, make sure we are not already running:
+pidof -q wsiAI && exit 0
 #X11 or Wayland (2nd line may catch edge cases):
 wm="$XDG_SESSION_TYPE"
 #wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
