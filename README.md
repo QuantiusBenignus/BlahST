@@ -216,6 +216,7 @@ Sometimes, one can mistakenly press the hotkey dedicated to starting `wsi` ( or 
 ```
 pidof -q blahstbot wsiAI || blahstbot -n
 ```
+but this may not work unless it is wrapped in a new shell instance. That is why we implement this protection inside the corresponding script itself.
 The chatbot utility is used as an example because this regime of operation (interactive speech-to-speech chat) is the most likely to suffer from user missuse the wrong hotkey, due to the increased frequency of use of these hotkeys during a chat.
 
 ##### Temporary directory and files
