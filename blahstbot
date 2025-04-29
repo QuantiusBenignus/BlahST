@@ -1,0 +1,220 @@
+#!/usr/bin/zsh
+# You can replace the shell shebang above with bash, minimal effort is made to support bash too.
+# Copyright (c) 2025 Quantius Benignus
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#-------------------------------------------------------------------------------------------
+
+# NAME: blahstbot
+# PREREQUSITES: 
+#  - whisper.cpp installed (https://github.com/ggerganov/whisper.cpp) or a whisperfile
+#  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools.
+#  - llama.cpp or llamafile (and models) for AI chatbot functionality.
+#  - xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
+#  - Piper neural text-to-speech engine for spoken AI assistant response 
+#-------------------------------------------------------------------------------------------
+# Are we already running this? (prevent multiple hotkey presses)
+pidof -q blahstbot && exit 0
+#---USER CONFIGURATION BLOCK----------------------------------------------------------------
+#The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
+source $HOME/.local/bin/blahst.cfg
+#llamf="llamserver" # override config to use llamma-server for bahstbot.
+CHATMODE=1 #temp reuse as flag variable, untill we support llamafiles.
+AUTOPASTE=0
+#---END USER CONFIG BLOCK-------------------------------------------------------------------
+ 
+#---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
+(( $blahst_deps )) || blahst_depends 
+#---END CHECK DEPENDENCIES.-----------------------------------------------------------------
+
+#Hear the complaints of components and do not continue with the sequence:
+set -e
+set -o pipefail 
+
+clipaste() {
+    local str="$1"
+    #xsel or wl-copy:
+    case "$wm" in
+        "x11")
+            if (( $PRIMESEL )); then
+              echo $str | xsel -ip
+              # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
+              # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
+              if (( $AUTOPASTE )); then xdotool click 2 ; fi
+            else
+              echo $str | xsel -ib
+              # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
+              if (( $AUTOPASTE )); then xdotool key ctrl+v ; fi
+            fi
+            ;;
+        "wayland")
+            if (( $PRIMESEL )); then
+              echo $str | wl-copy -p
+              # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
+              # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
+              if (( $AUTOPASTE )); then ydotool click 0xC2; fi
+            else
+              echo $str | wl-copy
+              # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
+              if (( $AUTOPASTE )); then ydotool key 37:1 55:1 55:0 37:0 ; fi
+            fi 
+            ;;
+        *)
+            echo $str
+            ;;
+    esac
+}
+
+# Process command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -p|--primary)
+            PRIMESEL=1
+            shift
+            ;;
+        -w|--whisperfile)
+            whf="$WHISPERFILE"
+            shift
+            ;;
+        -a|--llamafile)
+            llamf="$LLAMAFILE --cli"
+            CHATMODE=0 #var reuse
+            shift
+            ;;
+        -n|--netapi)
+            #This uses the hostname or IP and port specified in the config block
+            #Can be overwritten, supplied as command line argument IP:PORT instead of this option
+            IPnPORT="$WHOST:$WPORT" 
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                #echo "Can't connect to whisper.cpp server at provided address!" >&2
+                #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
+                pidof whserver > /dev/null  2>&1 || { whserver --host $WHOST --port $WPORT -t $NTHR -nt -fa -sns -m $WMODEL 2>/dev/null & }
+                desknote "No connection to whisper.cpp server" "Starting server at $IPnPORT now, please, press OK..."
+            fi
+            shift
+            ;;
+        -h|--help)
+            echo -e "Usage: $0 [-p|--primary] [-n|--netapi] [-w|--whisperfile] [-l|--llamafile]\n"
+            echo -e "  -p, --primary: Use PRIMARY selection instead of clipboard\n"
+            echo -e "  -n, --netapi: Use whisper.cpp/llama.cpp servers with the host:port in the blahst.cfg GONFIG block\n"
+            echo -e "  -w, --whisperfile: Use whisperfile instead of standalone whisper.cpp. Note that the whisperfile will use the script-configured (not embedded) model.\n"
+            echo -e "  -a, --llamafile: Use llamafile instead of standalone llama.cpp. Note that the llamafile will use the script-configured (not embedded) LLM model.\n"
+            echo -e "Any other non-flag command-line argument is expected to be an <IP:port> pair. Error will occur if diferent."
+            echo -e "The AI functions are experimental and work in progress." 
+            echo -e "\nCAUTION: Transfering any AI-generated Linux commands to your command line is at your own risk. Make sure you know what you are doing."
+            exit 0
+            ;;
+        *)
+            #The network address and port should have already been sanitized
+            IPnPORT=$1
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                #echo "Can't connect to whisper.cpp server at provided address!" >&2
+                #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
+                pidof whserver > /dev/null  2>&1 || { whserver --host $WHOST --port $WPORT -t $NTHR -nt -fa -sns -m $WMODEL 2>/dev/null & }
+                desknote "No connection to whisper.cpp server" "Starting server at $IPnPORT now, please, press OK..."
+            fi
+            shift
+            ;;
+    esac
+done
+
+#Initialize llama-server:
+(( CHATMODE )) && {
+    if  [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $LHOST:$LPORT/health)" != "200" ]]; then
+        pidof llamserver > /dev/null  2>&1 || { llamserver --host $LHOST --port $LPORT -t $NTHR -ngl 99 -fa -c 8192 -m $HEAVYMODEL 2>/dev/null & }
+        desknote "No connection to llama.cpp server" "Starting server at $LHOST:$LPORT now, please, press OK..."
+        touch $TEMPD/chatfile
+        pidof llamserver > /dev/null  2>&1 && { echo "I am ready. What shall we chat about?" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null ; }
+    fi ;
+}
+
+#echo "Recording now: "
+rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 3% channels 1 2>/dev/null
+
+#Time stamps for timing the performance of the various stages (Un/Comment as needed): 
+#stmp=$(date +%s%N)
+
+if [[ -n "$IPnPORT" ]] ; then 
+    #echo "Sending to server now: "
+    str=$(curl -S -s $IPnPORT/inference \
+        -H "Content-Type: multipart/form-data" \
+        -F file="@$ramf" \
+        -F temperature="0.0" \
+        -F temperature_inc="0.2" \
+        -F response_format="text")
+elif [[ "$whf" == *.llamafile ]]; then
+    #echo "Using $whf:"
+    str="$($whf -t $NTHR -nt --gpu auto -f $ramf 2>/dev/null)"     
+else
+    #A default fallback if the whisper server is offline.
+    #echo "Transcribing now: "
+    str="$(transcribe -t $NTHR -nt -fa -m $WMODEL -f $ramf 2>/dev/null)" 
+fi
+
+#echo "Got text back after: "$((($(date +%s%N) - stmp)/1000000))" ms" 
+#stmp=$(date +%s%N)
+
+# Whisper detected non-speech events such as (wind blowing): 
+str="${str/\(*\)}"   
+str="${str#$'\n'}"    
+#Prefer the power of zsh, but loose full POSIX compliance.
+if [[ -n "$ZSH_VERSION" ]] ; then
+   str="${str# }"
+   str="${str# }"
+   str="${(C)str:0:1}${str#?}"
+   if (( CHATMODE )); then 
+        strai="$(< $TEMPD/chatfile)$str"
+        echo "$str" >> $TEMPD/chatfile
+        strai="${strai//$'\n'/\n}"
+        strai="${strai//\"/*}"
+        str=$(curl -S -s $LHOST:$LPORT/v1/chat/completions \
+                   -H "Content-Type: application/json" \
+                   -H "Authorization: Bearer no-key" \
+                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"Gemma3\",\"messages\": [{\"role\": \"system\",\"content\": \"You are Gemma3, a helpful assistant who answers briefly, precisely and to the point.\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
+                   | jq -r '.choices[0].message.content')       
+       str="${str//\*/}"
+       str="${str/\[end of text\]}"
+       echo "$str" >> $TEMPD/chatfile
+       echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null &
+   fi
+elif [[ -n "$BASH" ]]; then
+   #Running in bash because you changed the shebang on line 1
+   str="${str#*(+([![:space:]]))}"
+   str="${str^}"
+   if (( CHATMODE )); then 
+        strai="$(< $TEMPD/chatfile)$str"
+        echo "$str" >> $TEMPD/chatfile
+        strai="${strai//$'\n'/\n}"
+        strai="${strai//\"/*}"
+        str=$(curl -S -s $LHOST:$LPORT/v1/chat/completions \
+                   -H "Content-Type: application/json" \
+                   -H "Authorization: Bearer no-key" \
+                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"Gemma3\",\"messages\": [{\"role\": \"system\",\"content\": \"You are Gemma3, a helpful assistant who answers precisely and to the point.\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
+                   | jq -r '.choices[0].message.content')       
+       str="${str//\*/}"
+       str="${str/\[end of text\]}"
+       echo "$str" >> $TEMPD/chatfile
+       echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null &
+   fi
+else
+    #Not testing for AI input if shell is unknown:
+    echo "Unknown shell, assuming bash compliance"
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+fi
+#We have a result (either recognized text or AI response):
+#Is this a GUI desktop environment: 
+if [[ -n "${XDG_CURRENT_DESKTOP}" ]] || [[ -n "${DISPLAY}" ]] || [[ -n "${DESKTOP_SESSION}" ]]; then
+    #xsel or wl-copy:
+    #echo "Pasting now: "
+    clipaste $str
+else
+#"Not running in a known graphics environment. Using standard output:
+    echo $str ; exit 0
+fi
