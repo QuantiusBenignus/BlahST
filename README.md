@@ -9,7 +9,13 @@
 - **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** (TODO: A dedicated documentation section describing the AI assistant functions)
 - **EXPERIMENTAL: The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
-      
+- **NEW. EXPERIMENTAL: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot) on an average Linux desktop computer with a 12GB GPU. Please, see video:**
+  
+
+https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
+
+_The video demonstrates using `blahstbot` for spoken interaction with Gemma3_12B, loaded in llama-server on localhost. There is no delay, the LLM actually answers unnaturally quickly, making the conversation smooth. Under the hood, the script (triggered with a Gnome hotkey bound to `blahstbot -n`) passes the text from the recognized speech to llama-server, gets the response back, formats it and sends it to piper for TTS conversion, while also loading it in the clipboard. Note that the LLM fits completely in GPU VRAM, which helps the snappy performance._
+    
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some local LLM features (AI assistant, translator, scheduller, CLI guide in testing stage):
 
 https://github.com/user-attachments/assets/877c699d-cf8b-4dd2-bc0e-75dee9054cf2
