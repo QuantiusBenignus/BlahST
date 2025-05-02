@@ -225,6 +225,14 @@ pidof -q blahstbot wsiAI || blahstbot -n
 but this may not work unless it is wrapped in a new shell instance. That is why we implement this protection inside the corresponding script itself.
 The chatbot utility is used as an example because this regime of operation (interactive speech-to-speech chat) is the most likely to suffer from user missuse the wrong hotkey, due to the increased frequency of use of these hotkeys during a chat.
 
+##### Stoping speech of the chatbot
+The LLM system prompt for the speech-to-speech `blahstbot` conversation mode instructs the LLM to not be too verbous. But when one finds it talking for too long, the speech can be stopped via the command:
+
+```
+pkill -SIGINT aplay
+```
+to which one can, of course, assign a hotkey for easy access.
+
 ##### Temporary directory and files
 Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
 This mount point of type "tmpfs" is created in RAM (let's assume that you have enough, say, at least 8GB) and is made available by the kernel for user-space applications. When the computer is shut down it is automatically wiped out, which is fine since we do not need the intermediate files.
