@@ -6,11 +6,10 @@
 - **Fast transcription with local whisper.cpp, or send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
 - **Able to select speech input language and translate from the command line with the dedicated `wsiml` script**
 - **Instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
-- **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** (TODO: A dedicated documentation section describing the AI assistant functions)
-- **EXPERIMENTAL: The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
+- **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** 
+- **The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
 - **NEW. EXPERIMENTAL: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot) on an average Linux desktop computer with a 12GB GPU. Please, see video:**
-  
 
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
@@ -34,7 +33,31 @@ The work is done by one of the scripts:
 - *wsi* for general speech input, 
 - *wsiml* for multilingual users,
 - *wsiAI* for users who want to also speak with a local large language model using llama.cpp or a llamafile.
-
+- *blooper* is an experimental tool for continouous dictation that will exit if a longer pause is detected.
+- *blahstbot* is a tool for spoken chat with a local (LAN) LLM, performing low-latency speech-to(-text-to)-speech spoken conversation and making the LLM responce available to (auto)paste.
+  
+```mermaid
+flowchart LR
+    style net fill:#1af,stroke:#333,stroke-width:2px
+    E0==>ST 
+    E1 ==> ST[🎤Speech-to-Text Input Anywhere]
+    E1 ==> D[✨Experimental AI Tools]
+    E2 ==>|flags -l -t|Ml[🌐 Multilingual Speech to Text.
+Translation into English]
+    E3 ==> D1[⌨️ Continuous Dictation\n Automatic Paste and Stop]
+	   D -->|"Assistant..."| D6([🤖 One-shot AI Assistant])
+     D -->|"Computer..."| D2([📝 AI Proofreader, via speech keyword])
+	   D --> |"Translator..."|D4([🌍 AI Translator])
+    E4 ==> D3[💬 Low-latency Speech Chat with a Local LLM 🤖]
+    subgraph net [<h3><b>BlahST<br></b></h3>]
+	   direction TB
+	   E0{{wsi}}
+     E1{{wsiAI}}
+     E2{{wsiml}}
+     E3{{blooper}}
+     E4{{blahstbot}}
+    end
+```
 
 Speech recognition is performed by whisper.cpp which must be precompiled on your Linux system or available as a [server](https://github.com/ggerganov/whisper.cpp/tree/master/examples/server) instance on your LAN or localhost.
 Alternativelly, you can choose to simply download and use an actually portable executable (with an embedded whisper model) [whisperfile](https://huggingface.co/Mozilla/whisperfile/tree/main), now part of the [llamafile](https://github.com/Mozilla-Ocho/llamafile) repository. 
