@@ -9,11 +9,11 @@
 - **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** 
 - **The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
-- **NEW. EXPERIMENTAL: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot) on an average Linux desktop computer with a 12GB GPU. Please, see video:**
+- **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot) on an average Linux desktop computer with a 12GB GPU. Please, see video (unmute audio):**
 
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
-_The video demonstrates using `blahstbot` for spoken interaction with Gemma3_12B, loaded in llama-server on localhost. There is no delay, the LLM actually answers unnaturally quickly, making the conversation smooth. Under the hood, the script (triggered with a Gnome hotkey bound to `blahstbot -n`) passes the text from the recognized speech to llama-server, gets the response back, formats it and sends it to piper for TTS conversion, while also loading it in the clipboard. Note that the LLM fits completely in GPU VRAM, which helps the snappy performance._
+_The above video demonstrates using `blahstbot` for spoken interaction with Gemma3_12B, loaded in llama-server on localhost. There is no delay, the LLM actually answers unnaturally quickly, making the conversation smooth. Under the hood, the script (triggered with a Gnome hotkey bound to `blahstbot -n`) passes the text from the recognized speech to llama-server, gets the response back, formats it and sends it to piper for TTS conversion, while also loading it in the clipboard. Note that the LLM fits completely in GPU VRAM, which helps the snappy performance._
     
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some local LLM features (AI assistant, translator, scheduller, CLI guide in testing stage):
 
@@ -27,7 +27,7 @@ https://github.com/user-attachments/assets/c3842318-14cb-4874-8651-7bc92abd187f
 _The above video (unmute please) demonstrates the use of blooper, modified from wsi to transcribe in a loop, until the user terminates speech input with a longer pause (~3sec as preset). With the use of xdotool (or ydotool for Wayland users), text is pasted automatically on any pause (or on hotkey interuption). For the video above, the speech is generated with a synthetic voice and collected by the microphone. This allows me to edit the text concurrently (multitaskers, don't try this at home:). At the end, the top-bar microphone icon should disappear, indicating program exit. It does not happen in the video because the screencast utility has a claim on the icon too._
 
 ### Principle of Operation (_the best UI is no UI at all._)
-The idea with BlahST is to be the UI-free software equivalent of a Mongol raid; short and powerfull burst of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp [[server]](./API_TRANSCRIBE.md) which dumps transcribed text into the clipboard (unless you pass it by a local LLM before that). An universal approach that should work in most Linux desktop environments and distributions.
+The idea with BlahST is to be the UI-free software equivalent of a tsunami; short and powerfull wave of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp [[server]](./API_TRANSCRIBE.md) which dumps transcribed text into the clipboard (unless you pass it by a local LLM before that). An universal approach that should work in most Linux desktop environments and distributions.
 
 The work is done by one of the scripts:
 - *wsi* for general speech input, 
@@ -77,6 +77,20 @@ For keyboard-only operation, with the standard `CTRL+V` for example, the standar
 ![blooper dataflow](https://github.com/user-attachments/assets/550d51fc-65f3-4c01-b355-9c6bd0ff2c49)
 </details>
 
+#### SUMMARY
+* On the press of a hotkey combo, the `wsi -p` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
+Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense.) 
+
+* If using `wsi` with no flags (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
+Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual. (For most people, right-hand hotkeys would work well.)
+
+* If transcribing over the network with `wsi -n` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
+  It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (to paste with the middle mouse button use `wsi -n -p` instead).
+* If using a whisperfile instead of, or in addition to a compiled whisper.cpp, invoke with `wsi -w ...` and the script will use the preset actually portable executable with the embedded whisper model of choice.  
+* For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle assign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
+
+* **blooper:** Users can use the supplied script **blooper** for continuous, automatic speech-to-text input (no need to press CTRL+V or click middle mouse button.) This is demonstrated in the second video above. Please, note that the Clipboard is used by default, the text will be autopasted under the keyboard carret, but in principle the PRIMARY selection can be set up instead, a middle mouse button click will be simulated and the text pasted at the current position of the mouse pointer at the (somewhat arbitrary) time the text is available. Please, note that this relies on silence detection, which depends on your physical environment. In noisy environments, use the hot key to stop recording.
+* **blahstbot** When all one wants to do is have a spoken conversation with a local LLM, they can use **blahstbot** to perform UI-free speech chat with minimal latency. This can be done from a slower computer over LAN (since whisper server and llama-server are used, with a hotkey bound to `blahstbot -n`) and does not need to be a continuous conversation with contiguous text exchange. The user can perform other tasks between questions, use the supplied answers (available in the clipboard) and then come back later to continue within the context or change the subject. 
 ---
 
 ### SYSTEM SETUP
@@ -205,19 +219,6 @@ Please, consult the documentation for your systems desktop environment.
 - [x] POSIX compliant installation script
 - [ ] POSIX compliant orchestration scripts
 
-#### SUMMARY
-* On the press of a hotkey combo, the `wsi -p` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
-Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense.) 
-
-* If using `wsi` with no flags (the approaches can coexist, just set up different set of hotkeys), the transcribed text is sent to the clipboard (not PRIMARY selection) under, either X11 or Wayland.
-Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys as usual. (For most people, right-hand hotkeys would work well.)
-
-* If transcribing over the network with `wsi -n` (selected with a hotkey of its own), the script will attempt to send the recorded audio to a running, properly set whisper.cpp server (on the LAN or `localhost`).
-  It will then collect the textual response and format it for pasting with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `SHIFT+INSert` keys (to paste with the middle mouse button use `wsi -n -p` instead).
-* If using a whisperfile instead of, or in addition to a compiled whisper.cpp, invoke with `wsi -w ...` and the script will use the preset actually portable executable with the embedded whisper model of choice.  
-* For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle assign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
-
-* **Experimental:** Users can use the supplied script **blooper** for continuous automatic speech-to-text input (no need to press CTRL+V or click middle mouse button.) This is demonstrated in the second video above. Please, note that the Clipboard is used by default, the text will be autopasted under the keyboard carret, but in principle the PRIMARY selection can be set up instead, a middle mouse button click will be simulated and the text pasted at the current position of the mouse pointer at the (somewhat arbitrary) time the text is available. Please, note that this relies on silence detection, which depends on your physical environment. In noisy environments, use the hot key to stop recording.
 ---
 
 <details>
