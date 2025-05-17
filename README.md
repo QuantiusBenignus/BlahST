@@ -98,7 +98,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 #### PREREQUISITES:
 - zsh or bash command line shell installation on a Linux system running any modern desktop environment.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN/localhost (see network-transcription [section](./API_TRANSCRIBE.md)), or optionally a  [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main)  whisperfile.
-- The orchestrator tool **wsi**, **wsiAI** or **wsiml** from this repository **must be placed in your $HOME/.local/bin/ folder or elsewhere in your $PATH** (The installation script `install-wsi` handles most of these).  
+- The orchestrator tools **wsi**, **wsiAI** or **wsiml** (along with **blooper** and **blahstbot**) from this repository **must be placed in your $HOME/.local/bin/ folder, in your $PATH** (The installation script `install-wsi` handles most of these).  
 - recent versions of 'sox', 'xsel' (or 'wl-copy' on Wayland) command-line tools from your system's repositories.
 -  A working microphone 
 > *DISCLAIMER: The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. The proposed actions and automations (e.g. installation locations etc.) are merely suggestions and are based on the author's choice and opinion. As they may not fit the taste or the particular situation of everyone, please, adjust as needed.*
@@ -121,10 +121,10 @@ Run the script `wsi` or `wsiAI` or`wsiml` directly from the command line first t
 <summary>MANUAL INSTALLATION</summary>
 
 *(Assuming whisper.cpp is installed and the "main" executable compiled with 'make' in the cloned whisper.cpp repo. See Prerequisites section)*
-* Place the script **wsi** and/or **wsiAI**, **wsiml** in $HOME/.local/bin/
+* Place the scripts **wsi** and/or **wsiAI**, **wsiml**, **blooper** and **blahstbot** in $HOME/.local/bin/
 * Make it executable
   ```
-  cd $HOME/.local/bin; chmod +x wsi wsiAI wsiml
+  cd $HOME/.local/bin; chmod +x wsi wsiAI wsiml blooper blahstbot
   ```
 * Run once from the command line to let the scripts check for required dependencies
 * If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory.
@@ -143,6 +143,7 @@ chmod +x whisper-tiny.en.llamafile
  
 #### CONFIGURATION
 
+**IMPORTANT:** The configuration will be migrated into a single file **blahst.cfg** that will be shared by all tools. Currently used by **blahstbot** only.
 Inside the `wsi`, `wsiAI`, `wsiml` or `blooper` script, near the beginning, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables have been collected. 
 Most can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
 If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded executable whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` (must be in the $PATH). 
