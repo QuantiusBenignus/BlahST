@@ -24,7 +24,7 @@ Set a new hotkey to start `blahstbot -n` (for llama-server use) and reuse the ma
 The bot will answer promptly and provide the question and answer as text to be pasted or autopasted (if configured). 
 
 ## Technologies Used
-Automatic Speech Recognition (ASR) - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
-Large Language Model (LLM) - [Gemma3-12B preset](https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-gguf), can be replaced with others depending on system hardware and user needs.
-Text-to-Speech (TTS) - [Piper](https://github.com/rhasspy/piper)
-Text parser and low-overhead workflow orchestrator - [zsh](https://www.zsh.org/)
+- Automatic Speech Recognition (ASR) - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
+- Large Language Model (LLM) - [Gemma3-12B preset](https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-gguf), can be replaced with others depending on system hardware and user needs.
+- Text-to-Speech (TTS) - [Piper](https://github.com/rhasspy/piper)
+- Text parser and low-overhead workflow orchestrator - [zsh](https://www.zsh.org/)
