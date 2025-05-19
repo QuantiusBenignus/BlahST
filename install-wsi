@@ -36,8 +36,8 @@ echo ""
 echo "1. ---------------------------------------------------------"
 echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi" "wsiml" "wsiAI" "blooper"
-cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper"
+chmod +x "wsi" "wsiml" "wsiAI" "blooper" "blahstbot"
+cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper" "blahstbot" "blahst.cfg"
 echo "Speech processor scripts copied and made executable. \$PATH updated."
 
 echo ""
@@ -103,7 +103,7 @@ echo "3. ---------------------------------------------------------"
 echo " "
 echo "You can use a local whisper.cpp installation, connect to a remote whisper.cpp server or use a downloaded whisperfile."
 echo "If you have a portable whisperfile instead of whisper.cpp, or a remote whisper.cpp server ready and running, answer 'n' to the next question."
-echo "Also answer 'Y' or 'y' if you want to set up and use the local whisper.cpp server that is part of the local whisper.cpp installation. "
+echo "However, answer 'Y' or 'y' if you want to set up and use the local whisper.cpp server that is part of the local whisper.cpp installation. "
 echo "Do you want to use a local whisper.cpp that has been preinstalled on this machine? [Y/n]: "
 read confirm
 confirm="${confirm:-Y}" 
@@ -114,30 +114,29 @@ confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
 if [ "$confirm" = "y" ]; then
     
     # Prompt the user for the whisper.cpp folder path
-    echo "Please enter the absolute path to the main and server executables of whisper.cpp:"
-    #e.g. /home/user1/Programming/Github/whisper.cpp
+    echo "Please enter the absolute path to the whisper-cli and server executables of whisper.cpp: e.g. /home/user1/Programming/Github/whisper.cpp/build/bin/"
     read whisper_path
     # Remove any trailing slashes from the whisper_path input
     whisper_path="${whisper_path%/}"
     
-    # Check if the whisper.cpp folder contains the 'main' executable
-    if [ -x "$whisper_path/main" ]; then
+    # Check if the whisper.cpp folder contains the 'whisper-cli' executable
+    if [ -x "$whisper_path/whisper-cli" ]; then
         # Create a symbolic link called "transcribe" in $dir pointing to "main"
-        ln -s "$whisper_path/main" "$dir/transcribe"
+        ln -s "$whisper_path/whisper-cli" "$dir/transcribe"
         echo "Symbolic link 'transcribe' created in $dir."
     else
-        echo "The 'main' executable was not found in the specified folder."
+        echo "The 'whisper-cli' executable was not found in the specified folder."
         echo "... please, rerun this and input the correct whisper.cpp location!"
         exit 1
     fi
     printf >&2 '%s ' 'Press ENTER to continue ...'; read k  
     # Let's also create a symbolic link to the whisper.cpp server:
-    if [ -x "$whisper_path/server" ]; then
+    if [ -x "$whisper_path/whisper-server" ]; then
         # Create a symbolic link called "whserver" in $dir pointing to "server"
-        ln -s "$whisper_path/server" "$dir/whserver"
+        ln -s "$whisper_path/whisper-server" "$dir/whserver"
         echo "Symbolic link 'whserver' created in $dir."
     else
-        echo "The 'server' executable was not found in the specified folder."
+        echo "The 'whisper-server' executable was not found in the specified folder."
         echo "... please, rerun this and input the correct whisper.cpp location!"
         exit 1
     fi
@@ -145,7 +144,7 @@ if [ "$confirm" = "y" ]; then
     # Prompt the user for the path to whisper.cpp models
     echo ""
     echo "Choosing a default whisper.cpp model file..."
-    echo "Please enter the path to the whisper.cpp model files"
+    echo "Please enter the absolute path to the whisper.cpp model files"
     echo "e.g. /home/user1/Programming/Github/whisper.cpp/models"
     read model_path
     # Remove any trailing slashes from the whisper_path input
@@ -228,7 +227,7 @@ if [ "$confirm" = "y" ]; then
     else
         echo " "
         echo "It seems WHISPER_MODEL is already set to <$WHISPER_DMODEL> in your environment"
-        echo "If it does not match <$model>, please, set it manually in your .profile file."
+        echo "If it does not match <$model>, please, set it manually in your .profile (or .zprofile)."
     fi
     export WHISPER_DMODEL="$model"
 else
@@ -245,7 +244,7 @@ else
     #    echo "jq is required. Please, install jq (e.g. 'apt install jq'...)" ; exit  1
     #fi
     #echo "   OK"
-    echo "Please, adjust the IP and port number of the server in the CONFIGURATION block of wsi and/or wsiml."
+    echo "Please, adjust the IP and port number of the server in the CONFIGURATION block of blahst.cfg."
 fi
 
 printf >&2 '%s ' 'Press ENTER to continue ...'; read k  
@@ -254,7 +253,7 @@ echo "4.============================================================"
 echo "Even if you have a local whisper.cpp installation, we can still set up and use a whisperfile." 
 echo "To do so, please, download using a browser, an appropriate whisperfile such as 'whisper-small.en.llamafile' from "
 echo ""
-echo "https://huggingface.co/Mozilla/whisperfile/tree/main, placing it in $dir before continuing." 
+echo "https://huggingface.co/Mozilla/whisperfile/tree/main, and place it in $dir before continuing." 
 echo ""
 echo "Do you have at least one downloaded whisperfile in $dir? [Y/n]"
 read ansyn
@@ -296,8 +295,8 @@ echo " "
 echo "With the wsiAI script, BlahST let's you use speech to interact with a local LLM (.gguf format) via llama.cpp or derivatives."
 echo "You can use a local llama.cpp installation, connect to a remote llama.cpp server or use a downloaded llamafile."
 echo "If you have a portable llamafile instead of llama-cli, or a remote llama.cpp server ready and running, answer 'n' to the next question."
-echo "Also answer 'Y' or 'y' if you want to set up and use the local llama-server that is part of the local llama.cpp installation. "
-echo "Do you want to use a local llama.cpp (llama-cli) that has been preinstalled on this machine? [Y/n]: "
+echo "However, answer 'Y' or 'y' if you want to set up and use the local llama-server that is part of the local llama.cpp installation. "
+echo "Do you want to use a local llama.cpp (llama-cli or llama-server) that has been preinstalled on this machine? [Y/n]: "
 read confirm
 confirm="${confirm:-Y}" 
 # Default to 'Y' if no input is provided
@@ -306,9 +305,9 @@ confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
 
 if [ "$confirm" = "y" ]; then
     
-    # Prompt the user for the whisper.cpp folder path
-    echo "Please enter the absolute (full) path to the foder with llama-cli and llama-server executables of llama.cpp:"
-    echo "e.g. /home/user1/Programming/github/llama.cpp"
+    # Prompt the user for the llama.cpp folder path
+    echo "Please enter the absolute (full) path to the foder with llama-cli and llama-server executables of llama.cpp:  usually SOMEFOLDER/llama.cpp/build/bin/"
+    echo "e.g. /home/user1/Programming/github/llama.cpp/build/bin/"
     read llama_path
     # Remove any trailing slashes from the llama_path input
     llama_path="${llama_path%/}"
@@ -337,7 +336,7 @@ if [ "$confirm" = "y" ]; then
     
     # Prompt the user for the path to llama.cpp models
     echo ""
-    echo "The USER_CONFIGURATION block of wsiAI contains variables for llama.cpp models"
+    echo "The USER_CONFIGURATION block of blahst.cfg contains variables for llama.cpp models"
     echo "Please, edit that block to use the models that you prefer (instructions in comments)"
     echo "Several models can be referenced, located in a convenient place, e.g. /home/user1/AI/Models"
     printf >&2 '%s ' 'Press ENTER to continue ...'; read k  
@@ -354,9 +353,10 @@ echo "7. ---------------------------------------------------------"
 echo ""
 echo "Optionally, piper can be set up for TTS inference so that the AI answers can be spoken back to you."
 echo "You can install piper following the instructions at https://github.com/rhasspy/piper"
-echo "Please, examine and edit the USER_CONFIGURATION block of wsiAI to choose the piper models"
+echo "Please, examine and edit the USER_CONFIGURATION block of blahst.cfg to choose/add piper models"
+echo "Multiple Piper language models can be used for multilingual TTS with 'blahstbot', the speech chat tool"
 printf >&2 '%s ' 'Press ENTER to continue ...'; read k  
 echo ""
 echo "Installation complete: "
-echo "Do not forget to check and adjust the USER_CONFIGURATION blocks in the scripts, as needed."
+echo "Do not forget to check and adjust the USER_CONFIGURATION blocks in blahst.cfg and in the scripts, as needed."
 echo "Run the 'wsi' and/or 'wsiml', 'wsiAI' scripts from the command line first to verify operation."
