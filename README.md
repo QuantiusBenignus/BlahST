@@ -9,8 +9,9 @@
 - **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** 
 - **The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
-- **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot) on an average Linux desktop computer with a 12GB GPU. Please, see video (unmute audio):**
-
+- **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot). Please, see video for a demo on an average Linux desktop computer with a 12GB GPU (unmute audio)
+  [Another demo with multilingual speech - a must see](./SPEECH_CHAT.MD)**
+    
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
 _The above video demonstrates using `blahstbot` for spoken interaction with Gemma3_12B, loaded in llama-server on localhost. There is no delay, the LLM actually answers unnaturally quickly, making the conversation smooth. Under the hood, the script (triggered with a Gnome hotkey bound to `blahstbot -n`) passes the text from the recognized speech to llama-server, gets the response back, formats it and sends it to piper for TTS conversion, while also loading it in the clipboard. Note that the LLM fits completely in GPU VRAM, which helps the snappy performance._
