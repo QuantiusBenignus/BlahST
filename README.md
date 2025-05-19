@@ -10,7 +10,7 @@
 - **The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
 - **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot). Please, see next video for a demo on an average Linux desktop computer with a 12GB GPU (unmute audio)
-  ([Another demo with multilingual speech](./SPEECH-CHAT.MD) - a must see.)**
+  ([Another demo with multilingual speech](./SPEECH-CHAT.md) - a must see.)**
     
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
