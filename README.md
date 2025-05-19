@@ -96,7 +96,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 ### SYSTEM SETUP
 
 #### PREREQUISITES:
-- zsh or bash command line shell installation on a Linux system running any modern desktop environment.   
+- zsh command-line shell installation on a Linux system running any modern desktop environment.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN/localhost (see network-transcription [section](./API_TRANSCRIBE.md)), or optionally a  [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main)  whisperfile.
 - The orchestrator tools **wsi**, **wsiAI** or **wsiml** (along with **blooper** and **blahstbot**) from this repository **must be placed in your $HOME/.local/bin/ folder, in your $PATH** (The installation script `install-wsi` handles most of these).  
 - recent versions of 'sox', 'xsel' (or 'wl-copy' on Wayland) command-line tools from your system's repositories.
