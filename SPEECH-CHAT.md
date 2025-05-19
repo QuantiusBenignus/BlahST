@@ -6,6 +6,8 @@ This tool leverages whisper.cpp for Automatic Speech Recognition (ASR), LLM text
 
 Would you like to hear Gemma3 speaking like multiple polyglots in the same conversation? Here is an example (unmute audio please):
 
+<video src='blahstbotml.mp4' width=600/></video>
+
 ## Languages Supported
 - All languages available in the [Piper repository](https://github.com/rhasspy/piper/blob/master/VOICES.md)
 - English default.
