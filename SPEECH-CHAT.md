@@ -11,12 +11,6 @@ Would you like to hear Gemma3 speaking like multiple polyglots in the same conve
 https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
 
 
-
-## Languages Supported
-- All languages available in the [Piper repository](https://github.com/rhasspy/piper/blob/master/VOICES.md)
-- English default.
-- Languages are added/configured in `blahst.cfg` as elements of an associative array, with keys that must conform to the ISO 639-1 standard, e.g. 'FR', 'DE', 'PT', etc.
-
 ## Features
 
 * **Real-time speech intertaction**
@@ -24,8 +18,17 @@ https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
 * **LLM-powered conversation**
 * **Fast, yet natural-sounding speech synthesis**
 
-## Usage
+## Setup
+Aside from configuring **Blahst** as described in the main [README.md](README.md), one needs to download the .onnx and .json files for each desired TTS language from the [Piper](https://github.com/rhasspy/piper) GitHub repo and place the in `$AI/piper` subfolder (see `blahst.cfg`)
+Several languages are preconfigured in blahst.cfg and the availability of at least some of those files in `$AI/piper` will be required.
+Adding new model files should be done in `blahst.cfg` in similar fashion.
 
+## Languages Supported
+- All languages available in the [Piper repository](https://github.com/rhasspy/piper/blob/master/VOICES.md)
+- English default.
+- Languages are added/configured in `blahst.cfg` as elements of an associative array, with keys that must conform to the ISO 639-1 standard, e.g. 'FR', 'DE', 'PT', etc.
+
+## Usage
 Set a new hotkey to start `blahstbot -n` (for llama-server use) and reuse the main "STOP-RECORDING" hotkey of BlahST at the end of your speech. 
 The bot will answer promptly and provide the question and answer as text to be pasted or autopasted (if configured). 
 
