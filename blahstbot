@@ -1,5 +1,5 @@
 #!/usr/bin/zsh
-# You can replace the shell shebang above with bash, minimal effort is made to support bash too.
+# Due to advanced parsing requirements for some new features, bash is being phased out. 
 # Copyright (c) 2025 Quantius Benignus
 # 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -12,7 +12,8 @@
 #-------------------------------------------------------------------------------------------
 
 # NAME: blahstbot
-# PREREQUSITES: 
+# PREREQUSITES:
+#  - zsh shell installation 
 #  - whisper.cpp installed (https://github.com/ggerganov/whisper.cpp) or a whisperfile
 #  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools.
 #  - llama.cpp or llamafile (and models) for AI chatbot functionality.
@@ -21,10 +22,11 @@
 #-------------------------------------------------------------------------------------------
 # Are we already running this? (prevent multiple hotkey presses)
 pidof -q blahstbot && exit 0
+
 #---USER CONFIGURATION BLOCK----------------------------------------------------------------
 #The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
 source $HOME/.local/bin/blahst.cfg
-#llamf="llamserver" # override config to use llamma-server for bahstbot.
+#Local overrides:
 CHATMODE=1 #temp reuse as flag variable, untill we support llamafiles.
 AUTOPASTE=0
 #---END USER CONFIG BLOCK-------------------------------------------------------------------
@@ -69,6 +71,30 @@ clipaste() {
             echo $str
             ;;
     esac
+}
+
+tts_play() {
+  local text="$1"
+  local lc="$2"
+  local model="$TTSMODEL"
+  local rate="$rtts"
+  
+  if [[ $# -eq 2 ]]; then 
+      if [[ -n "${TTSM[$lc]}" ]]; then
+        local model="$PPRMDIR/${TTSM[$lc]}"
+        local rate="$modrate[$lc]"
+      else
+        text="Warning. A text-to-speech model is not available for this language."
+      fi
+  fi
+  {
+    piper --model "$model" --output-raw <<< "$text" 2>/dev/null | \
+      aplay -r "$rate" -f S16_LE -t raw - 2>/dev/null
+  } &
+  local aplay_pid=$!
+  while kill -0 "$aplay_pid" 2>/dev/null; do
+    sleep 0.1
+  done
 }
 
 # Process command line arguments
@@ -130,7 +156,7 @@ done
         pidof llamserver > /dev/null  2>&1 || { llamserver --host $LHOST --port $LPORT -t $NTHR -ngl 99 -fa -c 8192 -m $HEAVYMODEL 2>/dev/null & }
         desknote "No connection to llama.cpp server" "Starting server at $LHOST:$LPORT now, please, press OK..."
         touch $TEMPD/chatfile
-        pidof llamserver > /dev/null  2>&1 && { echo "I am ready. What shall we chat about?" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null ; }
+        pidof llamserver > /dev/null  2>&1 && { tts_play "I am ready. What shall we chat about?"; }
     fi ;
 }
 
@@ -163,28 +189,38 @@ fi
 # Whisper detected non-speech events such as (wind blowing): 
 str="${str/\(*\)}"   
 str="${str#$'\n'}"    
-#Prefer the power of zsh, but loose full POSIX compliance.
+
 if [[ -n "$ZSH_VERSION" ]] ; then
    str="${str# }"
    str="${str# }"
    str="${(C)str:0:1}${str#?}"
    if (( CHATMODE )); then 
-        strai="$(< $TEMPD/chatfile)$str"
         echo "$str" >> $TEMPD/chatfile
+        strai="$(< $TEMPD/chatfile)"
         strai="${strai//$'\n'/\n}"
         strai="${strai//\"/*}"
-        str=$(curl -S -s $LHOST:$LPORT/v1/chat/completions \
+        strr=$(curl -S -s $LHOST:$LPORT/v1/chat/completions \
                    -H "Content-Type: application/json" \
                    -H "Authorization: Bearer no-key" \
-                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"Gemma3\",\"messages\": [{\"role\": \"system\",\"content\": \"You are Gemma3, a helpful assistant who answers briefly, precisely and to the point.\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
+                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"Gemma3\",\"messages\": [{\"role\": \"system\",\"content\": \"$SPROMPT\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
                    | jq -r '.choices[0].message.content')       
-       str="${str//\*/}"
-       str="${str/\[end of text\]}"
-       echo "$str" >> $TEMPD/chatfile
-       echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null &
+       strr="${strr//\*/}"
+       strr="${strr/\[end of text\]}"
+       #[[ $strr == *stopTTS* ]] && { pkill -SIGINT aplay; exit 0 ; }       
+       echo "$strr" >> $TEMPD/chatfile 
+       arr=(${(s:<:)strr}) 
+       for el in $arr; do
+           arr2=(${(s:>:)el})
+           [[ ${#arr2} == 1 ]] && [[ $arr2[1] != /* ]] && { tts_play "$arr2[1]" ; } \
+           || { [[ $arr2[1] != /* ]] && { tts_play "$arr2[2]" "$arr2[1]" ; } \
+               || { tts_play "$arr2[2]" ; } ; }
+       done
+       str="$str\n${strr//<(?|)([A-Z][A-Z])>/}"
+   else
+        tts_play "Llamafile support has not been implemented yet. Sorry!"   
    fi
 elif [[ -n "$BASH" ]]; then
-   #Running in bash because you changed the shebang on line 1
+   #Running in bash because you changed the shebang on line 1, but this is being phased out.
    str="${str#*(+([![:space:]]))}"
    str="${str^}"
    if (( CHATMODE )); then 
@@ -195,16 +231,18 @@ elif [[ -n "$BASH" ]]; then
         str=$(curl -S -s $LHOST:$LPORT/v1/chat/completions \
                    -H "Content-Type: application/json" \
                    -H "Authorization: Bearer no-key" \
-                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"Gemma3\",\"messages\": [{\"role\": \"system\",\"content\": \"You are Gemma3, a helpful assistant who answers precisely and to the point.\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
+                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"Gemma3\",\"messages\": [{\"role\": \"system\",\"content\": \"$SPROMPT\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
                    | jq -r '.choices[0].message.content')       
        str="${str//\*/}"
        str="${str/\[end of text\]}"
        echo "$str" >> $TEMPD/chatfile
        echo "$str" | piper --model $TTSMODEL --output-raw 2>/dev/null | aplay -r $rtts -f S16_LE -t raw - 2>/dev/null &
+   else
+       tts_play "Llamafile support has not been implemented yet. Sorry!"   
    fi
 else
-    #Not testing for AI input if shell is unknown:
-    echo "Unknown shell, assuming bash compliance"
+    #Not testing for AI input if shell is not zsh:
+    desknote "Unknown shell, assuming bash, LLM features suppressed" "Transcribed text can be pasted..."
     str="${str##+([[:space:]])}"
     str="${str^}"
 fi
