@@ -3,14 +3,14 @@
 
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp.** 
 
-- **Fast transcription with local whisper.cpp, or send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
+- **Fast transcription with `wsi` via local whisper.cpp, or send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
 - **Able to select speech input language and translate from the command line with the dedicated `wsiml` script**
-- **Instead of compiling whisper.cpp, can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use the command-line flag '-w' when setting your hotkeys**
-- **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This upgraded functionality is in the wsiAI script, which also does everything wsi does.** 
-- **The blooper utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
-- **EXPERIMENTAL: Added AI proofreader, that corrects (typos, grammar etc.) any selected editable text in any window. Triggered on the selected text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
+- **Can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use command-line flag `wsi -w` when setting your hotkeys**
+- **The `blooper` utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
+- **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This functionality is in the `wsiAI` script.** 
+- **EXPERIMENTAL: Added AI proofreader, triggered on any selected (editable) text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
 - **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot). Please, see next video for a demo on an average Linux desktop computer with a 12GB GPU (unmute audio)
-  ([Another demo with multilingual speech](./SPEECH-CHAT.md) - a must see.)**
+  ([Another demo with multilingual speech](./SPEECH-CHAT.md))**
     
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
