@@ -4,8 +4,8 @@
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp.** 
 
 - **Fast transcription with `wsi` via local whisper.cpp, or send audio to a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
-- **Able to select speech input language and translate from the command line with the dedicated `wsiml` script**
-- **Can use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, just use command-line flag `wsi -w` when setting your hotkeys**
+- **Can select speech input language and translate from the command line with the dedicated `wsiml` script**
+- **Use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile) executable, via command-line flag (`wsi -w` when setting hotkeys)**
 - **The `blooper` utility allows continuous "hands-free" speech input or dictation, with automatic pasting loop, using xdotool or ydotool. On longer silence, the script will exit and can be reactivated with a hotkey.**
 - **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations, that are both spoken back and available in the clipboard. This functionality is in the `wsiAI` script.** 
 - **EXPERIMENTAL: Added AI proofreader, triggered on any selected (editable) text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
