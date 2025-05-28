@@ -1,4 +1,4 @@
-# <img src="resources/hotkeys.png" height="64px" width="64px"> BlahST - Speech Input into Any Editable Text Field </img>
+# <img src="resources/hotkeys.png" height="64px" width="64px"> BlahST - Speech Input in Any Editable Text Field </img>
 **Blah** **S**peech-to-**T**ext lets you have a bla(h)st inputing text from speech on Linux, with keyboard shortcuts and whisper.cpp. Fire up your microphone and perform high-quality, multilingual speech recognition offline. Extended with local LLMs, it becomes a potent tool to converse with your Linux computer. No VRAM-consuming GUI, just a few configurable [hotkeys](./resources/hotkeys.png).
 
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp.** 
