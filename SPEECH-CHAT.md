@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
 * **Multilingual support**
 * **LLM-powered conversation**
 * **Fast, yet natural-sounding speech synthesis**
+* **NEW: Append context to spoken questions by simply selecting any text in any window with the mouse**
 
 ## Setup
 Aside from configuring **Blahst** as described in the main [README.md](README.md), one needs to download the .onnx and .json files for each desired TTS language from the [Piper](https://github.com/rhasspy/piper) GitHub repo and place the in `$AI/piper` subfolder (see `blahst.cfg`)
@@ -36,4 +37,4 @@ The bot will answer promptly and provide the question and answer as text to be p
 - Automatic Speech Recognition (ASR) - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
 - Large Language Model (LLM) - [Gemma3-12B preset](https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-gguf), can be replaced with others depending on system hardware and user needs.
 - Text-to-Speech (TTS) - [Piper](https://github.com/rhasspy/piper)
-- Text parser and low-overhead workflow orchestrator - [zsh](https://www.zsh.org/)
+- Text parser and low-overhead workflow orchestrator - [zsh](https://www.zsh.org/) Outperforms languages like Python by a lot with its direct execution of pipelined command-line tools. 
