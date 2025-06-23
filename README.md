@@ -251,7 +251,22 @@ pidof -q blahstbot wsiAI || blahstbot -n
 but this may not work unless it is wrapped in a new shell instance. That is why we implement this protection inside the corresponding script itself.
 The chatbot utility is used as an example because this regime of operation (interactive speech-to-speech chat) is the most likely to suffer from user missuse the wrong hotkey, due to the increased frequency of use of these hotkeys during a chat.
 
-##### Stoping speech of the chatbot
+##### Hotkey command to end speech input
+The command proposed in the configuration for stoping speech recording is (2 equivalent forms)
+
+```
+pkill --signal 2 rec
+pkill -SIGINT rec
+```
+but in some cases, under specific load conditions, this signal may not be reliably transmited to `rec` (`sox`).
+Then try to use SIGTERM instead, which is a bit more aggressive but still will let `rec` clear its state gracefully:
+
+```
+pkill rec
+pkill -SIGTERM rec
+```
+
+##### Stoping speech output of the chatbot
 The LLM system prompt for the speech-to-speech `blahstbot` conversation mode instructs the LLM to not be too verbous. But when one finds it talking for too long, the speech can be stopped via the command:
 
 ```
