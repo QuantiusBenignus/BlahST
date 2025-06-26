@@ -78,7 +78,7 @@ For keyboard-only operation, with the standard `CTRL+V` for example, the standar
 ![blooper dataflow](https://github.com/user-attachments/assets/550d51fc-65f3-4c01-b355-9c6bd0ff2c49)
 </details>
 
-#### SUMMARY
+#### USAGE SUMMARY
 * On the press of a hotkey combo, the `wsi -p` script will record speech (stopped with a hotkey or by silence detection), use a local copy of whisper.cpp and send the transcribed text to the PRIMARY selection under, either X11 or Wayland.
 Then all one has to do is paste it with the middle mouse button anywhere they want. (For people holding the mouse with their right hand, speech recording hotkeys for the left hand would make sense.) 
 
@@ -111,6 +111,8 @@ In a folder of your choice, clone the BlahST repository and then choose an insta
 git clone https://github.com/QuantiusBenignus/BlahST.git
 cd ./BlahST
 chmod +x install-wsi
+
+# If using the installation script:
 ./install-wsi
 ```
 
