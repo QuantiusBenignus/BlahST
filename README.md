@@ -119,8 +119,8 @@ chmod +x install-wsi
 ##### USING THE INSTALLATION SCRIPT
 - Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
 The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` and/or `wsiAI`, `wsiml`.
-- In each file, there is a USER-CONFIGURATION-BLOCK, where the variables should be given sensible values, based on the particular user situation. **NOTE: User configuration far all tools will soon be consolidated in a single file `blahst.cfg`**
-- Run the script `wsi` or `wsiAI` or`wsiml` directly from the command line first to verify its proper operation. Later it will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
+- **User configuration for all tools has been consolidated in the single file `blahst.cfg`. You will edit the USER CONFIGURATION BLOCK in that file to setup your environment.** In each file there may be a config block with local overrides for some variables.
+- Run the scripts (e.g `wsi` or `wsiAI`) directly from the command line first to verify proper operation. To be invoked later with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 
 ##### MANUAL INSTALLATION
 
@@ -146,8 +146,10 @@ The installation script also handles setup for network transcription, but the IP
   For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
 ```
 ln -s /full/path/to/whisper.cpp/whisper-cli $HOME/.local/bin/transcribe
+#also if using the whisper-server:
+ln -s /full/path/to/whisper.cpp/whisper-server $HOME/.local/bin/whserver
 ```
-If transcribe is not in your $PATH, either edit the call to it in **wsi** to include the absolute path, or add its location to the $PATH variable. Otherwise the script will fail.
+If `transcribe` is not in your $PATH, either edit the call to it in **wsi** to include the absolute path, or add its location to the $PATH variable. Otherwise the script will fail.
 If you prefer not to compile whisper.cpp, or in addition to that, download and set the executable flag of a suitable whisperfile, for example:
 ```
 cd $HOME/.local/bin
@@ -157,9 +159,8 @@ chmod +x whisper-tiny.en.llamafile
  
 #### CONFIGURATION
 
-**IMPORTANT:** The configuration will be migrated into a single file **blahst.cfg** that will be shared by all tools. Currently used by **blahstbot** only.
-Inside the `wsi`, `wsiAI`, `wsiml` or `blooper` script, near the beginning, there is a clearly marked section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables have been collected. 
-Most can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
+**IMPORTANT:** The configuration of BlahST has beeen migrated into a single file **blahst.cfg** that is now shared by all tools. Near the beginning of this file, there is a section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables have been collected, grouped in sections by tool. (Inside each script, there may also be a CONFIG BLOCK for local overrides, where needed.)
+Most settings can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
 If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded executable whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` (must be in the $PATH). 
 
 #### GUI SETUP OF HOTKEYS
