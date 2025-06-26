@@ -1,6 +1,6 @@
 #!/usr/bin/zsh
-# You can replace the shell above with bash, some effort is made to support both shells.
-# Copyright (c) 2024 Quantius Benignus
+# Operation in bash not guaranteed.
+# Copyright (c) 2024, 2025 Quantius Benignus
 # 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,121 +21,18 @@
 #--------------------------------------------------------------------------
 #Above all, make sure we are not already running:
 pidof -q wsiAI && exit 0
-#X11 or Wayland (2nd line may catch edge cases):
-wm="$XDG_SESSION_TYPE"
-#wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
 
-#---USER CONFIGURATION BLOCK----------------------------------------------------------------------
-#Please, adjust the variables here to suit your environment:
-# Store temp files in memory for speed and to reduce SSD/HDD "grinding":
-TEMPD='/dev/shm'
-# Hardcoded temp wav file to store the speech audio and get overwritten every time (in RAM):
-ramf="$TEMPD/wfile-$USER"
-#Set the number of processing threads for whisper.cpp inference (adjust for your case):
-NTHR=8
-#It seems that the optimum number of transcribe threads should equal half CPU processing cores:
-#NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
-# Use clipboard to paste from unless PRIMESEL set to true to use PRIMARY selection (middle mouse button to paste): 
-PRIMESEL=false
-# Try to paste automatically on completed transcription, reqires xdotool and such:
-AUTOPASTE=true
-#Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
-#(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
-WHOST="127.0.0.1"
-WPORT="58080"             
-
-#The superdirectory where AI models (Whisper, LLMs, TTS etc.) are stored (adjust as needed):
-AI="$HOME/REPLACE_W_PATH_TO/Models"
-# Default whisper.cpp model file for local ASR inference (base.en provides excellent WER for English only)
-#WMODEL="$TEMPD/ggml-base.en.bin"
-WMODEL=${WHISPER_DMODEL:-"$AI/whisper/ggml-base.en.bin"}
-# Uncomment to use available whisperfile (WITH BUILT-IN MODEL) instead of standalone whisper.cpp or whisper.cpp server
-WHISPERFILE="whisper-tiny.en.llamafile" #available from https://huggingface.co/Mozilla/whisperfile/tree/main
-#Use the following large language model with llama.cpp for the interactive assistant/translator etc.:
-LLMODEL="$AI/gemma-2-9b-it-Q6_K_L.gguf" #avalable from https://huggingface.co/bartowski/gemma-2-9b-it-GGUF/tree/main   
-#Use a LIGHTWEIGHT large language model with llama.cpp for a simpler interactive assistant:
-LIGHTLMODEL="$AI/gemma-2-2b-it-Q6_K_L.gguf" # available from https://huggingface.co/google/gemma-2-2b-it-GGUF
-#Use a larger LLM for tasks that require more advanced capabilities (slower):
-HEAVYMODEL="$AI/Qwen2.5-14B-Instruct-Q5_K_L.gguf" # available from https://huggingface.co/bartowski/Qwen2.5-14B-Instruct-GGUF
-#Default llama.cpp executable:
-llamf="llam" #This is an existing systemwide symbolic link to llama-cli from lllama.cpp
-#Uncomment the following to use a LLM from a llammafile (also needs flag -a) instead of standalone llamma.cpp:
-LLAMAFILE="$AI/gemma-2-2b-it.Q6_K.llamafile"
-#LLAMAFILE="llamafile-0.9.2" #available from https://github.com/Mozilla-Ocho/llamafile/releases/tag/0.9.2
-#Use the following text-to-speech Piper model for human-like audio response in English:
-TTSMODEL="$AI/piper/en_US-lessac-low.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
-#The above TTS model has sample rate 16000 (if you change the model, adjust the sample rate below):
-rtts="16000" 
-#Use the following text-to-speech Piper model for human-like audio response in the language (e.g. chinese) of the LLM translator function:
-TRANSMODEL="$AI/piper/zh_CN-huayan-medium.onnx"  #available from https://github.com/rhasspy/piper/blob/master/VOICES.md
-#The above model has sample rate 22050 (if you change it, adjust the sample rate below):
-rtrans="22050" 
-#---END USER CONFIG BLOCK------------------------------------------------------------------------
-
-#Notification code, prefers zenity, then notify-send, which should be available across the
-#most distributions, in package libnotify or libnotify-bin:
-desknote() {
-    local title="$1"
-    local message="$2"
-
-    if command -v zenity &> /dev/null; then
-        zenity --info --text="$message"
-    elif command -v notify-send &> /dev/null; then
-        notify-send "$title" "$message"
-    elif command -v kdialog &> /dev/null; then
-        kdialog --passivepopup "$message" 5
-    else
-        echo "Notification Message: $message" >&2
-        echo "Please install zenity or notify-send to use notifications." >&2
-        echo "You can install either using your package manager, e.g.:" >&2
-        echo "  sudo apt-get install zenity or sudo apt-get install libnotify-bin" >&2
-        echo "  sudo yum install zenity or sudo apt-get install libnotify" >&2
-        echo "  sudo pacman -S zenity, etc." >&2
-    fi
-}
-
-#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
-#The install-wsi script should have taken care of this, left here for the manual install.
-command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
-#The next is only needed if curl requests json output from the whisper.cpp server;
-#command -v jq &>/dev/null || { echo "jq is required. Please, install jq" >&2 ; exit 1 ; }
-command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-[ -n $WHISPERFILE ] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
-\nor download a whisperfile portable executable w model inside (see https://huggingface.co/Mozilla/whisperfile/tree/main)\
-\nand create 'transcribe' in your PATH as a symbolic link to the chosen executable, e.g.\n \
-'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
-command -v llam &>/dev/null || { echo -e "For interaction with an AI, install llama.cpp (see https://github.com/ggerganov/llama.cpp)\
-\nor download a llamafile portable executable (see https://huggingface.co/Mozilla)\
-\nand create in your PATH a symbolic link to the llama-cli executable, e.g.\n \
- 'ln -s /full/path/to/llama.cpp/llama-cli \$HOME/.local/bin/llam'" >&2 ; exit 1 ; }
-command -v piper &>/dev/null || { echo -e "Please, install piper text-to-speech (see https://github.com/rhasspy/piper)\
-\nto use the AI assistant and translator features with human-like voice response." >&2 ; exit 1 ; }
-# We will use zenity or notify-send (part of libnotify or libnotify-bin in some distros) for desktop notifications:
-command -v zenity &>/dev/null || command -v notify-send &>/dev/null || { echo "zenity or notify-send needed for error reporting. Please, install zenity or libnotify-bin" >&2 ; exit 1 ; }
-#Now let's check if we are in X11 or Wayland and use the right utility:
-if [[ wm == "wayland" ]]; then
-    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
-    if [ "$AUTOPASTE" = true ]; then 
-       command -v ydotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install ydotool" >&2 ; exit 1 ; }
-    fi
-elif [[ wm == "x11" ]]; then
-    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
-    if [ "$AUTOPASTE" = true ]; then 
-       command -v xdotool &>/dev/null || { echo "To have the transcribed text pasted automatically at the cursor position, please install xdotool" >&2 ; exit 1 ; }
-    fi
-fi
-#Check USER configuration vars:
-for llv in $WMODEL $LLMODEL $LIGHTMODEL $HEAVYMODEL $TTSMODEL $TRANSMODEL
-do
-[[ -f $llv ]] || { desknote "File not found: " "$llv was not found. \nPlease, adjust in USER CONFIGURATION BLOCK." ; exi1 1 ; }
-done 
-command -v $LLAMAFILE &>/dev/null || { desknote "Not found: " "Executable $LLAMAFILE not found." ; exit 1 ; }
-command -v $WHISPERFILE &>/dev/null || { desknote "Not found: " "Executable $WHISPERFILE not found." ; exit 1 ; }
-echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n"
-desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
-To remove this message, comment out the 'CHECK DEPENDENCIES' block in the wsiAI script.\n \
-\nYou can run wsiAI --help from the Terminal to learn about its options..."
-#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
+#---USER CONFIGURATION BLOCK----------------------------------------------------------------
+#The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
+source $HOME/.local/bin/blahst.cfg
+#Local overrides:
+AUTOPASTE=1
+#PRIMESEL=1
+#---END USER CONFIG BLOCK-------------------------------------------------------------------
+ 
+#---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
+(( $blahst_deps )) || blahst_depends 
+#---END CHECK DEPENDENCIES.-----------------------------------------------------------------
 
 #Hear the complaints of the above tools and do not continue with the sequence:
 set -e
@@ -144,7 +41,7 @@ set -e
 while [ $# -gt 0 ]; do
     case "$1" in
         -p|--primary)
-            PRIMESEL=true
+            PRIMESEL=1
             shift
             ;;
         -c|--clipboard)
@@ -336,27 +233,27 @@ else
 #echo "Pasting now: "
  case "$wm" in
     "x11")
-        if [ "$PRIMESEL" = true ]; then
+        if (( $PRIMESEL )); then
           echo $str | xsel -ip
           # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
           # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
-          if [ "$AUTOPASTE" = true ]; then xdotool click 2 ; fi
+          if (( $AUTOPASTE )); then xdotool click 2 ; fi
         else
           echo $str | xsel -ib
           # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
-          if [ "$AUTOPASTE" = true ]; then xdotool key ctrl+v ; fi
+          if (( $AUTOPASTE )); then xdotool key ctrl+v ; fi
         fi
         ;;
     "wayland")
-        if [ "$PRIMESEL" = true ]; then
+        if (( $PRIMESEL )); then
           echo $str | wl-copy -p
           # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
           # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
-          if [ "$AUTOPASTE" = true ]; then ydotool click 0xC2; fi
+          if (( $AUTOPASTE )); then ydotool click 0xC2; fi
         else
           echo $str | wl-copy
           # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
-          if [ "$AUTOPASTE" = true ]; then ydotool key 37:1 55:1 55:0 37:0 ; fi
+          if (( $AUTOPASTE )); then ydotool key 37:1 55:1 55:0 37:0 ; fi
         fi 
         ;;
     *)
