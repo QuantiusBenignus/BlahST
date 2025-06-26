@@ -35,7 +35,7 @@ The work is done by one of the scripts:
 - *wsiml* for multilingual users,
 - *wsiAI* for users who want to also speak with a local large language model using llama.cpp or a llamafile.
 - *blooper* is an experimental tool for continouous dictation that will exit if a longer pause is detected.
-- *blahstbot* is a tool for spoken chat with a local (LAN) LLM, performing low-latency speech-to(-text-to)-speech spoken conversation and making the LLM responce available to (auto)paste.
+- *blahstbot* is a tool for spoken chat with a local (LAN) LLM, performing low-latency speech-to(-text-to)-speech conversation and making the LLM responce available to (auto)paste.
   
 ```mermaid
 flowchart LR
@@ -99,7 +99,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 #### PREREQUISITES:
 - zsh command-line shell installation on a Linux system running any modern desktop environment.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN/localhost (see network-transcription [section](./API_TRANSCRIBE.md)), or optionally a  [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main)  whisperfile.
-- The orchestrator tools **wsi**, **wsiAI** or **wsiml** (along with **blooper** and **blahstbot**) from this repository **must be placed in your $HOME/.local/bin/ folder, in your $PATH** (The installation script `install-wsi` handles most of these).  
+- The orchestrator tools **wsi**, **wsiAI** or **wsiml** (along with **blooper** and **blahstbot**) from this repository **must be placed in your $HOME/.local/bin/ folder, in your $PATH**. The installation script `install-wsi` handles most of these, but it needs to be executable and accessible itself.
 - recent versions of 'sox', 'xsel' (or 'wl-copy' on Wayland) command-line tools from your system's repositories.
 -  A working microphone 
 > *DISCLAIMER: The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. The proposed actions and automations (e.g. installation locations etc.) are merely suggestions and are based on the author's choice and opinion. As they may not fit the taste or the particular situation of everyone, please, adjust as needed.*
@@ -110,25 +110,37 @@ In a folder of your choice, clone the BlahST repository and then choose an insta
 ```
 git clone https://github.com/QuantiusBenignus/BlahST.git
 cd ./BlahST
+chmod +x install-wsi
+./install-wsi
 ```
 
-<details>
-<summary>USING THE INSTALLATION SCRIPT</summary>
-Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
-The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` and/or `wsiAI`, `wsiml`
-Run the script `wsi` or `wsiAI` or`wsiml` directly from the command line first to verify its proper operation. Later it will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
-</details>
-<details>
-<summary>MANUAL INSTALLATION</summary>
+##### USING THE INSTALLATION SCRIPT
+- Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
+The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` and/or `wsiAI`, `wsiml`.
+- In each file, there is a USER-CONFIGURATION-BLOCK, where the variables should be given sensible values, based on the particular user situation. **NOTE: User configuration far all tools will soon be consolidated in a single file `blahst.cfg`**
+- Run the script `wsi` or `wsiAI` or`wsiml` directly from the command line first to verify its proper operation. Later it will be invoked only with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 
-*(Assuming whisper.cpp is installed and the "main" executable compiled with 'make' in the cloned whisper.cpp repo. See Prerequisites section)*
-* Place the scripts **wsi** and/or **wsiAI**, **wsiml**, **blooper** and **blahstbot** in $HOME/.local/bin/
-* Make it executable
+##### MANUAL INSTALLATION
+
+*(Assuming whisper.cpp is installed and the "whisper-cli" executable compiled in the cloned whisper.cpp repo. See Prerequisites section)*
+* Place the scripts **wsi** and/or **wsiAI**, **wsiml**, **blooper**, **blahstbot** and **blahst.cfg** in $HOME/.local/bin/
+* Make them executable:
   ```
+  cp wsi wsiAI wsiml blooper blahstbot blahst.cfg $HOME/.local/bin/
   cd $HOME/.local/bin; chmod +x wsi wsiAI wsiml blooper blahstbot
   ```
-* Run once from the command line to let the scripts check for required dependencies
-* If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "main" executable in the whisper.cpp directory.
+* Make sure $HOME/.local/bin is part of your $PATH ( `echo $PATH` ) and if not, add it (e.g. by placing `export PATH="$HOME/.local/bin:$%PATH"` in your .profile or .zprofile file) 
+* Configure the user environment by editing **blahst.cfg** and the tool-specific USER_CONFIG_BLOCK in each file. Please, see **CONFIGURATION** below.  
+* Run the tools (e.g. `wsi` or `wsi -n`) once from the command line to let the scripts check for required dependencies:
+  ```
+  # If .local/bin is still not in the $PATH:
+  ./wsi -n
+  # If .local/bin is already in the $PATH:
+  wsi -n
+  #Can also run wsi --help to get idea of the options for the specific tool:
+  wsi --help
+  ```
+* If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "whisper-cli" executable in the whisper.cpp directory.
   For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
 ```
 ln -s /full/path/to/whisper.cpp/main $HOME/.local/bin/transcribe
@@ -140,7 +152,6 @@ cd $HOME/.local/bin
 wget https://huggingface.co/Mozilla/whisperfile/resolve/main/whisper-tiny.en.llamafile
 chmod +x whisper-tiny.en.llamafile
 ```
-</details>
  
 #### CONFIGURATION
 
@@ -149,7 +160,7 @@ Inside the `wsi`, `wsiAI`, `wsiml` or `blooper` script, near the beginning, ther
 Most can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
 If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded executable whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` (must be in the $PATH). 
 
-##### GUI SETUP OF HOTKEYS
+#### GUI SETUP OF HOTKEYS
 To start and stop speech input, for both manual and automatic installation
 <details>
 <summary> CASE 1: GNOME</summary>
@@ -217,9 +228,6 @@ The hotkey to stop speech recording should be done similarly with another key co
 Please, note that there may be slight variations in the above steps depending on the version installed on your system.
 For many other environements, such as **Mate, Cinnamon, LXQt, Deepin**, etc. the steps should be somewhat similar to the examples above.
 Please, consult the documentation for your systems desktop environment.
-#### TO DO
-- [x] POSIX compliant installation script
-- [ ] POSIX compliant orchestration scripts
 
 ---
 
