@@ -1,5 +1,5 @@
 #!/usr/bin/zsh
-#If you replace the shell above with bash (at your own risk)
+# Operation in bash is not guaranteed.
 # Copyright (c) 2024 Quantius Benignus
 # 
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -18,77 +18,20 @@
 #--------------------------------------------------------------------------
 #Time stamps for timing the performance of the various stages (Un/Comment as needed): 
 #echo $(date +%s.%N)
-#X11 or Wayland (2nd line may catch edge cases):
-wm="$XDG_SESSION_TYPE"
-#wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
 
-#---USER CONFIGURATION BLOCK----------------------------------------------------------------------
-#PLEASE, ADJUST THE VARIABLES HERE TO SUIT YOUR ENVIRONMENT:
-# Store temp files in memory for speed and to reduce SSD/HDD "grinding":
-TEMPD='/dev/shm'
-# Hardcoded temp wav file to store the speech audio and get overwritten every time (in RAM):
-ramf="$TEMPD/wfile"
-#Set the number of processing threads for whisper.cpp inference (adjust for your case):
-NTHR=8
-#It seems that the optimum number of transcribe threads should equal half CPU processing cores:
-#NTHR=$(( $(getconf _NPROCESSORS_ONLN) / 2 ))
+# Are we already running this? (prevent multiple hotkey presses)
+pidof -q blooper && exit 0
 
-#Model superdirectory where AI models (Whisper, LLMs, TTS etc.) are stored (mostly needed for wsiAI):
-AI=$HOME/PATH_TO_YOUR/Models
-# Default whisper.cpp model file for ASR inference (with local whisper.cpp, possibly whisperfile):
-#WMODEL="$TEMPD/ggml-base.en.bin"
-WMODEL=${WHISPER_DMODEL:-"$AI/whisper/ggml-base.en.bin"}
-# Uncomment to use available whisperfile (downloaded to a folder in the PATH and set to EXECUTABLE):
-#WHISPERFILE="whisper-tiny.en.llamafile" 
-#Provide hardcoded whisper.cpp hostname and port. To be used when invoked with -n option from CLI:
-#(Can be overwritten when command line argument IP:PORT is supplied instead of '-n')
-WHOST="127.0.0.1"
-WPORT="58080"             
-#---END USER CONFIG BLOCK------------------------------------------------------------------------
-
-#Notification code, prefers zenity, then notify-send, (which should be available across
-#most distributions, in package libnotify or libnotify-bin), KDE fallback is kdialog:
-desknote() {
-    local title="$1"
-    local message="$2"
-
-    if command -v zenity &> /dev/null; then
-        zenity --info --text="$message"
-    elif command -v notify-send &> /dev/null; then
-        notify-send "$title" "$message"
-    elif command -v kdialog &> /dev/null; then
-        kdialog --passivepopup "$message" 5
-    else
-        echo "Notification Message: $message" >&2
-        echo "Please install zenity or notify-send (or kdialog for KDE) to use desktop alerts." >&2
-        echo "You can install either using your package manager, e.g.:" >&2
-        echo "  sudo apt-get install zenity or sudo apt-get install libnotify-bin" >&2
-        echo "  sudo yum install zenity or sudo apt-get install libnotify" >&2
-        echo "  sudo pacman -S zenity, etc." >&2
-    fi
-}
-
-#---CHECK DEPENDENCIES. This block can be commented out once dependencies confirmed-----------------------------------
-command -v curl &>/dev/null || { echo "curl is required. Please, install curl" >&2 ; exit 1 ; }
-command -v sox &>/dev/null || { echo "sox is required. Please, install sox" >&2 ; exit 1 ; }
-[[ -n $WHISPERFILE ]] || command -v transcribe &>/dev/null || { echo -e "Please, install whisper.cpp (see https://github.com/ggerganov/whisper.cpp)\
-\nand create 'transcribe' in your PATH as a symbolic link to the main executable, e.g.\n \
- 'ln -s /full/path/to/whisper.cpp/main \$HOME/.local/bin/transcribe'" >&2 ; exit 1 ; }
-#Now let's check if we are in X11 or Wayland and use the right utility:
-if [[ wm == "wayland" ]]; then
-    command -v wl-copy &>/dev/null || { echo "wl-copy is needed for the clipboard. Please, install wl-copy" >&2 ; exit 1 ; } 
-    command -v ydotool &>/dev/null || { echo "ydotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
-elif [[ wm == "X11" ]]; then
-    command -v xsel &>/dev/null || { echo "We rely on xsel for the clipboard. Please, install xsel." >&2 ; exit 1 ; }
-    command -v xdotool &>/dev/null || { echo "xdotool is needed for auto-paste. Please, install it" >&2 ; exit 1 ; }
-fi
-[[ -f $WMODEL ]] || { desknote "File not found: " "$WMODEL was not found. \nPlease, correct in USER CONFIGURATION BLOCK." ; exi1 1 ; }
-[[ -n $WHISPERFILE ]] && { [[ -x $WHISPERFILE ]] || desknote "Not found: " "Executable $WHISPERFILE not found." ; exit 1 ; }
-echo -e "\nLooks like you have all dependencies installed.\nTo remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n"
-desknote "Dependencies installed" "\nLooks like you have all dependencies installed.\n \
-To remove this message, comment out the 'CHECK DEPENDENCIES' block in the blooper script.\n \
-\nYou can run blooper --help from the Terminal to learn about its options..."
-#---END CHECK DEPENDENCIES. The above block can be commented out after successful 1st run----------------------------
+#---USER CONFIGURATION BLOCK----------------------------------------------------------------
+#The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
+source $HOME/.local/bin/blahst.cfg
+#Local overrides:
+#none needed
+#---END USER CONFIG BLOCK-------------------------------------------------------------------
+ 
+#---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
+(( $blahst_deps )) || blahst_depends 
+#---END CHECK DEPENDENCIES.-----------------------------------------------------------------
 
 # Process command line arguments first
 while [ $# -gt 0 ]; do
@@ -140,7 +83,7 @@ rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 1.0 3% channels 1 2>/dev/null
 #stmp=$(date +%s%N)
 
 if [ -n "$IPnPORT" ]; then 
-    echo "Sending to server now: "
+    #echo "Sending to server now: "
     str=$(curl -S -s $IPnPORT/inference \
         -H "Content-Type: multipart/form-data" \
         -F file="@$ramf" \
