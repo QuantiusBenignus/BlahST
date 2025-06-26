@@ -2,7 +2,7 @@
 
 # Run this script once before using the BlahST utilities.
 # Please, make sure you are in the cloned repo directory .../BlahST/
-if [ ! -e "wsi" ]; then echo "Please, cd into the directory where this script is located." ; exit 1 ; fi 
+if [ ! -e "wsi" ]; then echo "Please, cd into the directory where the wsi script (part of BlahST) is located." ; exit 1 ; fi 
 # Define the directory for the executable scripts
 dir="$HOME/.local/bin"
 echo ""
@@ -18,14 +18,14 @@ fi
 if echo "$PATH" | grep -q ":$dir:"; then
     echo "Directory $dir is already in the PATH."
 else
+    # Add the directory to the PATH permanently for Zsh
+    if [ -f "$HOME/.zprofile" ]; then
+       grep ${dir#*$HOME/}:\$PATH .zprofile || echo "export PATH=\"$dir:\$PATH\"" >> "$HOME/.zprofile"
+    fi
     # Add the directory to the PATH permanently for Bash
     if [ -f "$HOME/.profile" ]; then
        #On some systems .profile checks if $HOME/.local/bin exists and adds it to the PATH.
        grep ${dir#*$HOME/}:\$PATH .profile || echo "export PATH=\"$dir:\$PATH\"" >> "$HOME/.profile"
-    fi
-    # Add the directory to the PATH permanently for Zsh
-    if [ -f "$HOME/.zprofile" ]; then
-       grep ${dir#*$HOME/}:\$PATH .zprofile || echo "export PATH=\"$dir:\$PATH\"" >> "$HOME/.zprofile"
     fi
     echo "Directory $dir was added permanently to the PATH."
 fi
@@ -38,7 +38,7 @@ echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
 chmod +x "wsi" "wsiml" "wsiAI" "blooper" "blahstbot"
 cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper" "blahstbot" "blahst.cfg"
-echo "Speech processor scripts copied and made executable. \$PATH updated."
+echo "BlahST scripts copied and made executable. \$PATH updated."
 
 echo ""
 echo "2.=========================================================="
@@ -113,8 +113,8 @@ confirm=$(echo "$confirm" | tr '[:upper:]' '[:lower:]')
 
 if [ "$confirm" = "y" ]; then
     
-    # Prompt the user for the whisper.cpp folder path
-    echo "Please enter the absolute path to the whisper-cli and server executables of whisper.cpp: e.g. /home/user1/Programming/Github/whisper.cpp/build/bin/"
+    # Prompt the user for the whisper.cpp folder
+    echo "Please enter the absolute path to the whisper-cli and whisper-server executables of whisper.cpp: e.g. /home/user1/Programming/Github/whisper.cpp/build/bin/"
     read whisper_path
     # Remove any trailing slashes from the whisper_path input
     whisper_path="${whisper_path%/}"
@@ -292,7 +292,7 @@ echo "   OK"
 echo "6. ---------------------------------------------------------"
 # Ask the user if they have a local llama.cpp
 echo " "
-echo "With the wsiAI script, BlahST let's you use speech to interact with a local LLM (.gguf format) via llama.cpp or derivatives."
+echo "With the wsiAI and blahstbot scripts, BlahST let's you use speech to interact with a local LLM (.gguf format) via llama.cpp or derivatives."
 echo "You can use a local llama.cpp installation, connect to a remote llama.cpp server or use a downloaded llamafile."
 echo "If you have a portable llamafile instead of llama-cli, or a remote llama.cpp server ready and running, answer 'n' to the next question."
 echo "However, answer 'Y' or 'y' if you want to set up and use the local llama-server that is part of the local llama.cpp installation. "
