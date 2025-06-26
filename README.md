@@ -145,7 +145,7 @@ The installation script also handles setup for network transcription, but the IP
 * If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "whisper-cli" executable in the whisper.cpp directory.
   For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
 ```
-ln -s /full/path/to/whisper.cpp/main $HOME/.local/bin/transcribe
+ln -s /full/path/to/whisper.cpp/whisper-cli $HOME/.local/bin/transcribe
 ```
 If transcribe is not in your $PATH, either edit the call to it in **wsi** to include the absolute path, or add its location to the $PATH variable. Otherwise the script will fail.
 If you prefer not to compile whisper.cpp, or in addition to that, download and set the executable flag of a suitable whisperfile, for example:
