@@ -17,7 +17,7 @@ _A conversation (speech to speech chat) where the answers and statements of the 
 * **Multilingual support**
 * **LLM-powered conversation**
 * **Fast, yet natural-sounding speech synthesis**
-* **NEW: Append context to questions spoken in turn by simply selecting any text in any window with the mouse. Even speeking is optional.**
+* **NEW: Append context to questions spoken in turn by simply selecting any text in any window with the mouse. Even speaking is optional.**
 
 ## Setup
 Aside from configuring **Blahst** as described in the main [README.md](README.md), one needs to download the .onnx and .json files for each desired TTS language from the [Piper](https://github.com/rhasspy/piper) GitHub repo and place the in `$AI/piper` subfolder (see `blahst.cfg`)
