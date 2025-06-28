@@ -10,7 +10,7 @@ Would you like to hear Gemma3 speaking like multiple polyglots in the same conve
 
 https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
 
-_A conversation (speech to speech chat) where the answers and statements of the same LLM are spoken in various languages, by different TTS models and voices, selected automatically._ 
+_A conversation (speech to speech chat) where the answers and statements of the same LLM are spoken in various languages, by different TTS models and voices, selected automatically. The conversation text can be pasted in any open window with a editable text field (here an editor), for example a chat app or a web forum, for interaction with foreign speakers._ 
 
 ## Features
 
@@ -21,7 +21,7 @@ _A conversation (speech to speech chat) where the answers and statements of the 
 * **NEW: Append context to questions spoken in turn by simply selecting any text in any window with the mouse. Even speaking is optional.**
 
 ## Setup
-Aside from configuring **Blahst** as described in the main [README.md](README.md), one needs to download the .onnx and .json files for each desired TTS language from the [Piper](https://github.com/rhasspy/piper) GitHub repo and place the in `$AI/piper` subfolder (see `blahst.cfg`)
+Aside from configuring **BlahST** as described in the main [README.md](README.md), one needs to download the .onnx and .json files for each desired TTS language from the [Piper](https://github.com/rhasspy/piper) GitHub repo and place the in `$AI/piper` subfolder (see `blahst.cfg`)
 Several languages are preconfigured in blahst.cfg and the availability of at least some of those files in `$AI/piper` will be required.
 Adding new model files should be done in `blahst.cfg` in similar fashion.
 
