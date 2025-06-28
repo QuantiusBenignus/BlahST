@@ -9,6 +9,7 @@ Would you like to hear Gemma3 speaking like multiple polyglots in the same conve
 
 
 https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
+
 _A conversation (speech to speech chat) where the answers and statements of the same LLM are spoken in various languages, by different TTS models and voices, selected automatically._ 
 
 ## Features
