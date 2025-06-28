@@ -3,14 +3,14 @@
 
 **BlahST is probably the leanest Whisper-based speech-to-text input tool for Linux, sitting on top of whisper.cpp.** 
 
-- **Fast transcription with `wsi` via local whisper.cpp, or a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
+- **Fast speech recognition with `wsi` via local whisper.cpp, or a whisper.cpp server for even faster [network transcription.](./API_TRANSCRIBE.md)**
 - **Can select speech input language and translate to English with the dedicated `wsiml` script**
 - **Option to use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile), (with a hotkey set for `wsi -w`)**
-- **The `blooper` utility allows continuous "hands-free" speech input or dictation with automatic pasting loop, using xdotool or ydotool. Exits on longer silence and can be reactivated with a hotkey.**
+- **The `blooper` utility does continuous "hands-free" speech input or dictation with automatic pasting loop, using xdotool or ydotool. Exits on longer silence and can be reactivated with a hotkey.**
 - **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations that are both spoken back and available in the clipboard. This functionality is in the `wsiAI` script.** 
 - **EXPERIMENTAL: Added AI proofreader, triggered on any selected (editable) text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
-- **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot). Please, see next video for a demo on an average Linux computer with a 12GB GPU (unmute audio)
-  ([Another demo with multilingual speech](./SPEECH-CHAT.md))**
+- **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot). Text selected from anywhere can become part of the conversation. Please, see next video for a demo on an average Linux computer with a 12GB GPU (unmute audio)
+  ([Another demo with multilingual speech chat](./SPEECH-CHAT.md))**
     
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
@@ -117,7 +117,7 @@ chmod +x install-wsi
 ```
 
 ##### USING THE INSTALLATION SCRIPT
-- Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to whisper.cpp `main` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
+- Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to the `whisper-cli` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
 The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` and/or `wsiAI`, `wsiml`.
 - **User configuration for all tools has been consolidated in the single file `blahst.cfg`. You will edit the USER CONFIGURATION BLOCK in that file to setup your environment.** In each file there may be a config block with local overrides for some variables.
 - Run the scripts (e.g `wsi` or `wsiAI`) directly from the command line first to verify proper operation. To be invoked later with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
@@ -160,7 +160,7 @@ chmod +x whisper-tiny.en.llamafile
 #### CONFIGURATION
 
 **IMPORTANT:** The configuration of BlahST has beeen migrated into a single file **blahst.cfg** that is now shared by all tools. Near the beginning of this file, there is a section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables have been collected, grouped in sections by tool. (Inside each script, there may also be a CONFIG BLOCK for local overrides, where needed.)
-Most settings can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use during transcription (or the IP and port number for the whisper.cpp server). 
+Most settings can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use (or the IP and port number for the whisper.cpp server). 
 If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded executable whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` (must be in the $PATH). 
 
 #### GUI SETUP OF HOTKEYS
@@ -172,14 +172,14 @@ To start and stop speech input, for both manual and automatic installation
 * Open your GNOME system settings and find "Keyboard".
 * Under "Keyboard shortcuts", "View and customize shortcuts"
 * In the new window, scroll down to "Custom Shortcuts" and press it.
-* Press "+" to add a new shortcut and give it a name: "Start Recording Speech"
+* Add a new shortcut (e.g. press `+`) and give it a name: "Start Recording Speech"
 * In the "Command" field type `/home/yourusername/.local/bin/wsi -p` for using the middle mouse button or change it to `.../wsi` for using the clipboard.
 * (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Then press "Set Shortcut" and select a (unused) key combination. For example a key combo like **CTRL+ALT+a** or a single unused key like **KP+** (keypad +).
 * Click Add and you are done. 
 
 The orchestrator script has a silence detection filter in the call to sox (rec) and would stop recording (in the best case) on 2 seconds of silence.
-In addition, if one does not want wait or has issues with the silence detection threshold:
+In addition, if one does not want to wait or has issues with the silence detection threshold:
 
 ##### Manual speech recording interuption (strongly recommended)
 For those who want to be able to interupt the recording manually with a key combination, in the spirit of great hacks, we are going to use the system built-in features:
@@ -187,7 +187,7 @@ For those who want to be able to interupt the recording manually with a key comb
 * Under "Keyboard shortcuts", "View and customize shortcuts"
 * In the new window, scroll down to "Custom Shortcuts" and press it.
 * Press "+" to add a new shortcut and give it a name: "Interupt Speech Input!"
-* In the "Command" field type `pkill --signal 2 rec`
+* In the "Command" field type `pkill rec`
 * Then press "Set Shortcut" and select a (unused) key combination. For example a key combo like **CTRL+ALT+x** or a single unused key like **KP-** (keypad -).
 * Click Add and you are done.
   
@@ -206,7 +206,7 @@ This is simalr to the GNOME setup above (for reference, see its more detailed in
 * (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Press the keys you wish to assign to the shortcut.
 * Click OK to save the shortcut.
- The hotkey to stop speech recording should be done similarly with another key combo and the command `pkill --signal 2 rec`.
+ The hotkey to stop speech recording should be done similarly with another key combo and the command `pkill rec`.
 </details>
 
 <details>
@@ -225,7 +225,7 @@ This is similar to the GNOME setup above (for reference, see its more detailed i
 * (For users of the multi-lingual models, replace `wsi` above with `wsiml` and if using a whisperfile, add the `-w` flag, i.e. `/home/yourusername/.local/bin/wsi -w` ). Finally, to sample the LLM functions, replace `wsi` with `wsiAI`.
 * Ensure that the Enabled checkbox is checked to activate the shortcut.
 * Apply the changes by clicking Apply or OK.
-The hotkey to stop speech recording should be done similarly with another key combo and the command `pkill --signal 2 rec`. 
+The hotkey to stop speech recording should be done similarly with another key combo and the command `pkill rec`. 
 </details>
 
 Please, note that there may be slight variations in the above steps depending on the version installed on your system.
@@ -263,7 +263,7 @@ but this may not work unless it is wrapped in a new shell instance. That is why 
 The chatbot utility is used as an example because this regime of operation (interactive speech-to-speech chat) is the most likely to suffer from user missuse the wrong hotkey, due to the increased frequency of use of these hotkeys during a chat.
 
 ##### Hotkey command to end speech input
-The command proposed in the configuration for stoping speech recording is (2 equivalent forms)
+The command initially proposed in the configuration for stoping speech recording was (2 equivalent forms)
 
 ```
 pkill --signal 2 rec
@@ -283,7 +283,7 @@ The LLM system prompt for the speech-to-speech `blahstbot` conversation mode ins
 ```
 pkill -SIGINT aplay
 ```
-to which one can, of course, assign a hotkey for easy access.
+to which one can, of course, assign a hotkey for easy access. Alternativelly, this can be done with a mouse click, using one of the functions of the [Voluble](https://github.com/QuantiusBenignus/voluble) GNOME shell extension.
 
 ##### Temporary directory and files
 Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
