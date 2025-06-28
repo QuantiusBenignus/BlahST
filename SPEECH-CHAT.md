@@ -3,13 +3,13 @@
 ## Overview
 To expand the lean and performant [**BlahST**](https://github.com/QuantiusBenignus/BlahST) into a snappy, UI-less platform for natural, spoken interaction with LLMs, the tool **blahstbot** has been added.
 This tool leverages whisper.cpp for Automatic Speech Recognition (ASR), LLM text interaction using llama.cpp and Piper Text-to-Speech (TTS) to create a seamless interactive speech chat experience across multiple languages.
-
+The text of the conversation can be pasted optionally and selectively, or automatically in any editable text field in the desktop. 
 Would you like to hear Gemma3 speaking like multiple polyglots in the same conversation? Here is an example (unmute audio please):
 
 
 
 https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
-
+_A conversation (speech to speech chat) where the answers and statements of the same LLM are spoken in various languages, by different TTS models and voices, selected automatically._ 
 
 ## Features
 
@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/b9f1aec4-e293-46a3-9c9b-45d5e05c66f4
 * **Multilingual support**
 * **LLM-powered conversation**
 * **Fast, yet natural-sounding speech synthesis**
-* **NEW: Append context to spoken questions by simply selecting any text in any window with the mouse**
+* **NEW: Append context to questions spoken in turn by simply selecting any text in any window with the mouse. Even speeking is optional.**
 
 ## Setup
 Aside from configuring **Blahst** as described in the main [README.md](README.md), one needs to download the .onnx and .json files for each desired TTS language from the [Piper](https://github.com/rhasspy/piper) GitHub repo and place the in `$AI/piper` subfolder (see `blahst.cfg`)
