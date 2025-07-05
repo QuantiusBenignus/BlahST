@@ -208,7 +208,7 @@ if [[ -n "$ZSH_VERSION" ]] ; then
        exit 0
    fi      
    if (( CHATMODE )); then 
-        echo -e "\n$str" >> $TEMPD/chatfile
+        echo -e "\nUser:\n$str" >> $TEMPD/chatfile
         strai="$(< $TEMPD/chatfile)"
         strai="${strai//$'\n'/\n}"
         strai="${strai//\"/*}"
@@ -224,7 +224,7 @@ if [[ -n "$ZSH_VERSION" ]] ; then
               {role: "user", content: $strai}]}')" | jq -r '.choices[0].message.content')
        strr="${strr//\*/}"
        strr="${strr/\[end of text\]}"
-       echo "$strr" >> $TEMPD/chatfile 
+       echo "Answer:\n$strr" >> $TEMPD/chatfile 
        str="$str\n${strr//<(?|)([A-Z][A-Z])>/}"
        #We have a result (either recognized text or AI response):
        #Is this a GUI desktop environment: 
