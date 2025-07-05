@@ -213,11 +213,15 @@ if [[ -n "$ZSH_VERSION" ]] ; then
         strai="${strai//$'\n'/\n}"
         strai="${strai//\"/*}"
         cur_prompt="$(cat $TEMPD/chatbot_prompt)"
-        strr=$(curl --no-buffer -S -s $LHOST:$LPORT/v1/chat/completions \
-                   -H "Content-Type: application/json" \
-                   -H "Authorization: Bearer no-key" \
-                   -d "{\"slot_id\": 0,\"temperature\": 0.13,\"n_keep\": -1,\"cache_prompt\": true,\"model\": \"BlahstBot\",\"messages\": [{\"role\": \"system\",\"content\": \"$cur_prompt\"}, {\"role\": \"user\", \"content\": \"$strai\"}]}" \
-                   | jq -r '.choices[0].message.content')       
+        strr=$(curl -S -s "$LHOST:$LPORT/v1/chat/completions" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer no-key" \
+          -d "$(jq -n \
+            --arg cur_prompt "$cur_prompt" \
+            --arg strai "$strai" \
+            '{slot_id: 0, temperature: 0.13, n_keep: -1, cache_prompt: true, model: "BlahstBot", messages: [
+              {role: "system", content: $cur_prompt},
+              {role: "user", content: $strai}]}')" | jq -r '.choices[0].message.content')
        strr="${strr//\*/}"
        strr="${strr/\[end of text\]}"
        echo "$strr" >> $TEMPD/chatfile 
