@@ -285,6 +285,14 @@ pkill -SIGINT aplay
 ```
 to which one can, of course, assign a hotkey for easy access. Alternativelly, this can be done with a mouse click, using one of the functions of the [Voluble](https://github.com/QuantiusBenignus/voluble) GNOME shell extension.
 
+##### Shutting down llamma-server and whisper-server.
+These are memory (and VRAM) hogs of course and sometimes they can be in the way (if you are running them on the local machine). A quick way to shut them down and free resources when not needed would be:
+(Note that the prompt cache will be lost).
+
+```
+pkill llamserver && pkill whserver && echo "OK, the servers have been shut down. VRAM reclaimed!"
+```
+
 ##### Temporary directory and files
 Speech-to-text transcription is memory- and CPU-intensive task and fast storage for read and write access can only help. That is why **wsi** stores temporary and resource files in memory, for speed and to reduce SSD/HDD "grinding": `TEMPD='/dev/shm'`. 
 This mount point of type "tmpfs" is created in RAM (let's assume that you have enough, say, at least 8GB) and is made available by the kernel for user-space applications. When the computer is shut down it is automatically wiped out, which is fine since we do not need the intermediate files.
