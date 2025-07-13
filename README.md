@@ -7,14 +7,14 @@
 - **Can select speech input language and translate to English with the dedicated `wsiml` script**
 - **Option to use a [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main) portable [whisperfile](https://huggingface.co/Mozilla/whisperfile), (with a hotkey set for `wsi -w`)**
 - **The `blooper` utility does continuous "hands-free" speech input or dictation with automatic pasting loop, using xdotool or ydotool. Exits on longer silence and can be reactivated with a hotkey.**
-- **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations that are both spoken back and available in the clipboard. This functionality is in the `wsiAI` script.** 
+- **Interaction with local LLMs via [llama.cpp](https://github.com/ggerganov/llama.cpp) or a [llamafile](https://github.com/Mozilla-Ocho/llamafile), producing textual answers or translations that are both spoken back and available in the clipboard. This functionality is in the `wsiAI` and `blahstbot` scripts.** 
 - **EXPERIMENTAL: Added AI proofreader, triggered on any selected (editable) text by speech: "Computer, proofread ... or Computer be like Grammarly..". After a short while, the selected text should be automatically replaced by the LLM.**
-- **NEW: Low-latency speech chat with local LLMs via the `blahstbot` tool. Natural, spoken conversation with Gemma3 (preset in blahstbot). Text selected from anywhere can become part of the conversation. Please, see next video for a demo on an average Linux computer with a 12GB GPU (unmute audio)
+- **NEW: Low-latency speech chat with local LLMs (`blahstbot`). Natural, spoken conversation with an LLM with optional context loaded from any mouse-selected text. Please, see next video for a demo on an average Linux computer with a 12GB GPU (unmute audio)
   ([Another demo with multilingual speech chat](./SPEECH-CHAT.md))**
     
 https://github.com/user-attachments/assets/022adffc-3e13-48cd-be5d-5919f1d5cae7
 
-_The above video demonstrates using `blahstbot` for spoken interaction with Gemma3_12B, loaded in llama-server on localhost. There is no delay, the LLM actually answers unnaturally quickly, making the conversation smooth. Under the hood, the script (triggered with a Gnome hotkey bound to `blahstbot -n`) passes the text from the recognized speech to llama-server, gets the response back, formats it and sends it to piper for TTS conversion, while also loading it in the clipboard. Note that the LLM fits completely in GPU VRAM, which helps the snappy performance._
+_The above video demonstrates using `blahstbot` for spoken interaction with Gemma3_12B, loaded in llama-server on localhost. There is no delay, the LLM actually answers quickly, making the conversation smooth. Under the hood, the script (triggered with a Gnome hotkey bound to `blahstbot -n`) passes the text from the recognized speech to llama-server, gets the response back, formats it and sends it to piper for TTS conversion, while also loading it in the clipboard. Note that the LLM fits completely in GPU VRAM, which helps the snappy performance._
     
 Using low-resource, optimized command-line tools, spoken text input happens very fast. Here is a demonstration video (please, UNMUTE the audio) with some local LLM features (AI assistant, translator, scheduller, CLI guide in testing stage):
 
@@ -28,7 +28,7 @@ https://github.com/user-attachments/assets/c3842318-14cb-4874-8651-7bc92abd187f
 _The above video (unmute please) demonstrates the use of blooper, modified from wsi to transcribe in a loop, until the user terminates speech input with a longer pause (~3sec as preset). With the use of xdotool (or ydotool for Wayland users), text is pasted automatically on any pause (or on hotkey interuption). For the video above, the speech is generated with a synthetic voice and collected by the microphone. This allows me to edit the text concurrently (multitaskers, don't try this at home:). At the end, the top-bar microphone icon should disappear, indicating program exit. It does not happen in the video because the screencast utility has a claim on the icon too._
 
 ### Principle of Operation (_the best UI is no UI at all._)
-The idea with BlahST is to be the UI-free software equivalent of a tsunami; short and powerfull wave of CPU/GPU action and then it is completely gone, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp [[server]](./API_TRANSCRIBE.md) which dumps transcribed text into the clipboard (unless you pass it by a local LLM before that). An universal approach that should work in most Linux desktop environments and distributions.
+The idea with BlahST is to be the UI-free software equivalent of a tsunami; short and powerfull wave of CPU/GPU action and then it is gone out of the way, with only textual traces in the clipboard and relative desktop peace. Just use a pair of hotkeys to start and stop recording from the microphone and send the recorded speech to whisper.cpp [[server]](./API_TRANSCRIBE.md) which dumps transcribed text into the clipboard (unless you pass it by a local LLM before that). An universal approach that should work in most Linux desktop environments and distributions.
 
 The work is done by one of the scripts:
 - *wsi* for general speech input, 
@@ -71,7 +71,7 @@ For keyboard-only operation, with the standard `CTRL+V` for example, the standar
 <details>
 <summary>DATAFLOW DIAGRAMS</summary>
    
-   #### wsiAI script (w sample LLM interaction)
+   #### wsiAI script (sample LLM interaction)
    ![wsiAI dataflow](https://github.com/user-attachments/assets/12a4a576-5227-4592-82ad-b8618a1cfae7)
 
    #### blooper (speech input in a loop)
@@ -91,7 +91,7 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 * For multilingual users, in addition to the features of wsi, `wsiml` provides the ability to specify a language, e.g. `-l fr` and the option to translate to english with `-t`. The user can in principle assign multiple hotkeys to the various languages they transcribe or translate from. For example, two additional hotkeys can be set, one for transcribing and another for translating from French by assigning the commands `wsiml -l fr` and `wsiml -l fr -t` correspondingly.
 
 * **blooper:** Users can use the supplied script **blooper** for continuous, automatic speech-to-text input (no need to press CTRL+V or click middle mouse button.) This is demonstrated in the second video above. Please, note that the Clipboard is used by default, the text will be autopasted under the keyboard carret, but in principle the PRIMARY selection can be set up instead, a middle mouse button click will be simulated and the text pasted at the current position of the mouse pointer at the (somewhat arbitrary) time the text is available. Please, note that this relies on silence detection, which depends on your physical environment. In noisy environments, use the hot key to stop recording.
-* **blahstbot** When all one wants to do is have a spoken conversation with a local LLM, they can use **blahstbot** to perform UI-free speech chat with minimal latency. This can be done from a slower computer over LAN (since whisper server and llama-server are used, with a hotkey bound to `blahstbot -n`) and does not need to be a continuous conversation with contiguous text exchange. The user can perform other tasks between questions, use the supplied answers (available in the clipboard) and then come back later to continue within the context or change the subject. 
+* **blahstbot** When all one wants to do is have a spoken conversation with a local LLM, they can use **blahstbot** to perform UI-free speech chat with minimal latency. This can be done from a slower computer over LAN (since whisper server and llama-server are used, with a hotkey bound to `blahstbot -n`) and does not need to be a continuous conversation with contiguous text exchange. The user can perform other tasks between questions, use the supplied answers (available in the clipboard) and then come back later to continue within the context or change the subject (also available via **RESET CONTEXT** spoken command). 
 ---
 
 ### SYSTEM SETUP
@@ -99,9 +99,10 @@ Then pasting happens with the `CTRL+V` (`CTRL+SHIFT+V` for GNOME terminal) or `S
 #### PREREQUISITES:
 - zsh command-line shell installation on a Linux system running any modern desktop environment.   
 - working [whisper.cpp installation](https://github.com/ggerganov/whisper.cpp) or a listening whisper.cpp server on your LAN/localhost (see network-transcription [section](./API_TRANSCRIBE.md)), or optionally a  [downloaded](https://huggingface.co/Mozilla/whisperfile/tree/main)  whisperfile.
-- The orchestrator tools **wsi**, **wsiAI** or **wsiml** (along with **blooper** and **blahstbot**) from this repository **must be placed in your $HOME/.local/bin/ folder, in your $PATH**. The installation script `install-wsi` handles most of these, but it needs to be executable and accessible itself.
+- The orchestrator tools **wsi**, **wsiAI** or **wsiml** (along with **blooper** and **blahstbot**) from this repository **must be placed in your $HOME/.local/bin/ folder, in your $PATH**. The installation script `install-wsi` handles most of these, but it needs to be made executable and accessible itself.
 - recent versions of 'sox', 'xsel' (or 'wl-copy' on Wayland) command-line tools from your system's repositories.
--  A working microphone 
+-  A working microphone
+-  To use the speech chat (blahstbot), a local `llama.cpp` installation or a listening `llama-server` (part of llama.cpp) is also needed.
 > *DISCLAIMER: The author neither takes credit nor assumes any responsibility for any outcome that may or may not result from interacting with the contents of this document. The proposed actions and automations (e.g. installation locations etc.) are merely suggestions and are based on the author's choice and opinion. As they may not fit the taste or the particular situation of everyone, please, adjust as needed.*
 
 #### INSTALLATION
@@ -118,13 +119,13 @@ chmod +x install-wsi
 
 ##### USING THE INSTALLATION SCRIPT
 - Run the script `install-wsi` from the folder of the cloned repository and follow the prompts. It will move the scripts and make them executable, create a link to the `whisper-cli` executable, set the environment, set a default whisper.cpp model, check for dependencies and request their installation if missing, etc. The script will also help you with the setup a whisperfile of your choice if you select that option.
-The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in `wsi` and/or `wsiAI`, `wsiml`.
-- **User configuration for all tools has been consolidated in the single file `blahst.cfg`. You will edit the USER CONFIGURATION BLOCK in that file to setup your environment.** In each file there may be a config block with local overrides for some variables.
+The installation script also handles setup for network transcription, but the IP and port for the whisper.cpp server must be set manually in **blahst.cfg**.
+- **User configuration for all tools has been consolidated in the single file `blahst.cfg`. You will edit the USER CONFIGURATION BLOCK in that file to setup your environment.** Local overrides for some variables may be set in the respective scripts.
 - Run the scripts (e.g `wsi` or `wsiAI`) directly from the command line first to verify proper operation. To be invoked later with [hotkeys](https://github.com/QuantiusBenignus/BlahST/#gui-setup-of-hotkeys) for speed and convenience.
 
 ##### MANUAL INSTALLATION
 
-*(Assuming whisper.cpp is installed and the "whisper-cli" executable compiled in the cloned whisper.cpp repo. See Prerequisites section)*
+*(Assuming whisper.cpp is installed and the `whisper-cli` and/or `whisper-server` executables compiled in the cloned whisper.cpp repo. See Prerequisites section)*
 * Place the scripts **wsi** and/or **wsiAI**, **wsiml**, **blooper**, **blahstbot** and **blahst.cfg** in $HOME/.local/bin/
 * Make them executable:
   ```
@@ -139,8 +140,9 @@ The installation script also handles setup for network transcription, but the IP
   ./wsi -n
   # If .local/bin is already in the $PATH:
   wsi -n
-  #Can also run wsi --help to get idea of the options for the specific tool:
+  #Can also run with --help to get idea of the options for the specific tool:
   wsi --help
+  wsiAI --help
   ```
 * If using local whisper.cpp, create a symbolic link (the code expects 'transcribe' in your $PATH) to the compiled "whisper-cli" executable in the whisper.cpp directory.
   For example, create it in your `$HOME/.local/bin/` (part of your $PATH) with 
@@ -160,7 +162,7 @@ chmod +x whisper-tiny.en.llamafile
 #### CONFIGURATION
 
 **IMPORTANT:** The configuration of BlahST has beeen migrated into a single file **blahst.cfg** that is now shared by all tools. Near the beginning of this file, there is a section, named **"USER CONFIGURATION BLOCK"**, where all the user-configurable variables have been collected, grouped in sections by tool. (Inside each script, there may also be a CONFIG BLOCK for local overrides, where needed.)
-Most settings can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use (or the IP and port number for the whisper.cpp server). 
+Most settings can be left as is but the important ones are the location of the (whisper, LLM, TTS) model files that you would like to use (or the IP and port number for the whisper.cpp or llama.cpp servers). 
 If using a whisperfile, please, set the WHISPERFILE variable to the filename of the previously downloaded executable whisperfile, i.e. `WHISPERFILE=whisper-tiny.en.llamafile` (must be in the $PATH). 
 
 #### GUI SETUP OF HOTKEYS
@@ -197,7 +199,7 @@ Now when the script is recording speech, it can be stopped with the new key comb
 
 <details>
 <summary> CASE 2: XFCE4</summary>
-This is simalr to the GNOME setup above (for reference, see its more detailed instructions) 
+This is similar to the GNOME setup above (for reference, see its more detailed instructions) 
   
 * Open the Xfce4 Settings Manager.
 * Navigate to Keyboard → Application Shortcuts.
@@ -317,7 +319,7 @@ https://github.com/QuantiusBenignus/cliblurt/assets/120202899/e4cd3e39-6dd3-421b
   
 #### Credits
 * Open AI (for [Whisper](https://github.com/openai/whisper))
-* Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggerganov/whisper.cpp))
+* Georgi Gerganov and community ( for Whisper's C/C++ port [whisper.cpp](https://github.com/ggml-org/whisper.cpp) and for the great [llama.cpp](https://github.com/ggml-org/llama.cpp) )
 * Justine Tunney, CJ Pais and the llamafile community (for llamafile and whisperfile)
 * The **sox** developers (for the venerable "Swiss Army knife of sound processing tools")
 * The creators and maintainers of CLI utilities such as **xsel, wl-copy, curl, jq, xdotool and others** that make the Linux environment (CLI and GUI) such a powerful paradigm.
