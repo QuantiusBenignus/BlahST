@@ -24,7 +24,8 @@ pidof -q blooper && exit 0
 
 #---USER CONFIGURATION BLOCK----------------------------------------------------------------
 #The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
-source $HOME/.local/bin/blahst.cfg
+source $HOME/.config/blahst.cfg
+source $HOME/.local/bin/blahst-helpers
 #Local overrides:
 #none needed
 #---END USER CONFIG BLOCK-------------------------------------------------------------------

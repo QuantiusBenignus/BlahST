@@ -1,7 +1,7 @@
 #!/usr/bin/zsh
 # Operation in bash is not guaranteed.
 # Copyright (c) 2024, 2025 Quantius Benignus
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -11,8 +11,8 @@
 # SOFTWARE.
 #--------------------------------------------------------------------------
 
-# NAME: wsi 
-# PREREQUSITES: 
+# NAME: wsi
+# PREREQUSITES:
 #  - whisper.cpp installation (see https://github.com/ggerganov/whisper.cpp) or a portable whisperfile
 #  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' and CLI tools from your system's repositories.
 #  - optional xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
@@ -23,15 +23,12 @@ pidof -q wsi && exit 0
 
 #---USER CONFIGURATION BLOCK----------------------------------------------------------------
 #The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
-source $HOME/.local/bin/blahst.cfg
+source $HOME/.config/blahst.cfg
+source $HOME/.local/bin/blahst-helpers
 #Local overrides:
 AUTOPASTE=1
 #PRIMESEL=1
 #---END USER CONFIG BLOCK-------------------------------------------------------------------
- 
-#---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
-(( $blahst_deps )) || blahst_depends 
-#---END CHECK DEPENDENCIES.-----------------------------------------------------------------
 
 # Process command line arguments first
 while [ $# -gt 0 ]; do
@@ -55,10 +52,10 @@ while [ $# -gt 0 ]; do
         -n|--netapi)
             #This uses the hostname or IP and port specified in the config block
             #Can be overwritten with a supplied command-line argument IP:PORT instead of this option
-            IPnPORT="$WHOST:$WPORT" 
+            IPnPORT="$WHOST:$WPORT"
             if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
-                echo "Can't connect to whisper.cpp server at provided address!" >&2  
-                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."   
+                echo "Can't connect to whisper.cpp server at provided address!" >&2
+                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
                 exit 1
             fi
             shift
@@ -75,8 +72,8 @@ while [ $# -gt 0 ]; do
             #The network address and port should have already been sanitized in extension
             IPnPORT=$1
             if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
-                echo "Can't connect to a whisper.cpp server at provided address!" >&2   
-                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."   
+                echo "Can't connect to a whisper.cpp server at provided address!" >&2
+                desknote "No connection to Whisper.cpp server" "No whisper.cpp server at $IPnPORT."
                 exit 1
             fi
             shift
@@ -84,79 +81,97 @@ while [ $# -gt 0 ]; do
     esac
 done
 
+send_audio() {
+    #The server inference has precedence (i.e. -w will be ignored if -n is present).
+    if [ -n "$IPnPORT" ]; then
+	str=$(curl -S -s $IPnPORT/inference \
+		   -H "Content-Type: multipart/form-data" \
+		   -F file="@$ramf" \
+		   -F language="${LANGUAGE:-auto}" \
+		   -F temperature="0.0" \
+		   -F temperature_inc="0.2" \
+		   -F response_format="text")
+	# | jq -r '.text' )
+    elif [[ "$whf" == *.llamafile ]]; then
+	#echo "Using whisperfile: "
+	str="$($whf -t $NTHR -nt -f '$ramf' 2>/dev/null)"
+    else
+	str="$(transcribe -t $NTHR -nt -m $WMODEL -f '$ramf' 2>/dev/null)"
+    fi
+
+    [[ ${KEEP_TEMP_FILE:-0} != 1 ]] && rm -f "$ramf"
+
+    # Whisper detected non-speech events such as (wind blowing):
+    str="${str/\(*\)}"
+    str="${str/\[*\]}"
+    str="${str#$'\n'}"
+    str="${str#$'\n'}"
+    #Prefer the power of zsh, but lose full POSIX compliance.
+    if [ -n "$ZSH_NAME" ]; then
+	str="${str#*([[:space:]])}"
+	str="${(C)str:0:1}${str#?}"
+    elif [ -n "$BASH" ]; then
+	#Running in bash because you changed the shebang on line 1
+	str="${str##+([[:space:]])}"
+	str="${str^}"
+    else
+	echo "Unknown shell, assuming bash compliance"
+	str="${str##+([[:space:]])}"
+	str="${str^}"
+    fi
+}
+
+handle_transcription() {
+    #We have a result, now we make a few decisions:
+    #If this is somehow run in a text console:
+    if [[ -z $DISPLAY || -z $DESKTOP_SESSION || -z $XDG_CURRENT_DESKTOP ]]; then
+	#"Not running in a known graphics environment. Using standard output:
+	echo $str ; exit 0
+    else
+	case "$wm" in
+	    x11)
+		echo $str | { (( $PRIMESEL )) && xsel -ip || xsel -ib; }
+		autopaste $wm
+		;;
+	    wayland)
+		echo $str | { (( $PRIMESEL )) && wl-copy -p || wl-copy; }
+		autopaste $wm
+		;;
+	    *)
+		echo $str
+		;;
+	esac
+    fi
+}
+
+sig_handler() {
+    trap - SIGINT
+    # echo "[int] $pid"
+    kill -SIGINT $pid
+    send_audio
+    handle_transcription
+    exit
+}
+
 #Hear the complaints of the above tools and do not continue with the sequence:
 set -e
 
-rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 5%  2>/dev/null
-
-#The server inference has precedence (i.e. -w will be ignored if -n is present). 
-if [ -n "$IPnPORT" ]; then
-    str=$(curl -S -s $IPnPORT/inference \
-        -H "Content-Type: multipart/form-data" \
-        -F file="@$ramf" \
-        -F temperature="0.0" \
-        -F temperature_inc="0.2" \
-        -F response_format="text")
-# | jq -r '.text' )
-elif [[ "$whf" == *.llamafile ]]; then
-    #echo "Using whisperfile: "
-    str="$($whf -t $NTHR -nt -f $ramf 2>/dev/null)"  
-else
-    str="$(transcribe -t $NTHR -nt -m $WMODEL -f $ramf 2>/dev/null)" 
-fi
-# Whisper detected non-speech events such as (wind blowing): 
-str="${str/\(*\)}"   
-str="${str/\[*\]}"
-str="${str#$'\n'}"    
-str="${str#$'\n'}"
-#Prefer the power of zsh, but lose full POSIX compliance.
-if [ -n "$ZSH_NAME" ]; then
-    str="${str#*([[:space:]])}"
-    str="${(C)str:0:1}${str#?}"
-elif [ -n "$BASH" ]; then
-    #Running in bash because you changed the shebang on line 1
-    str="${str##+([[:space:]])}"
-    str="${str^}"
-else
-    echo "Unknown shell, assuming bash compliance"
-    str="${str##+([[:space:]])}"
-    str="${str^}"
+umask 077
+if (( 1 )); then # previous mode
+    rec -q -t wav "$ramf" rate 16k silence 1 0.1 1% 1 2.0 5% 2>/dev/null
+else # disabled for now
+    # If we want to avoid the 2s sox VAD lag when we stopped to speak
+    # An UI-facing button could kill the process as soon as pressed to retrieve the translation
+    # quickly. Ideally, whisper.cpp server should be used in streaming mode.
+    #
+    # https://github.com/chirlu/sox/pull/4/files is likely desirable to avoid loosing 250ms of audio
+    # Note that in case of interruption, Sox may truncate the wav badly leading whisper.cpp to
+    # believe it's an week-long audio file.
+    rec -q -t wav -r 16k -b 16 -c 1 --buffer 2500  --input-buffer 2500 "$ramf" rate 16k silence 1 0.1 1% 1 2.0 5% &
+    pid=$!
+    trap sig_handler SIGINT
+    wait
 fi
 
-#We have a result, now we make a few decisions:
-#If this is somehow run in a text console: 
-if [[ -z "${DISPLAY}" ]] || [[ -z "${DESKTOP_SESSION}" ]] || [[ -z "${XDG_CURRENT_DESKTOP}" ]]; then
-#"Not running in a known graphics environment. Using standard output:
-    echo $str ; exit 0
-else
-#xsel or wl-copy:
- case "$wm" in
-    "x11")
-        if (( $PRIMESEL )); then
-          echo $str | xsel -ip
-          # Simply clicking the middle mouse button. The user must take care of: 1. Window choice. 2. Position within window.
-          # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
-          if (( $AUTOPASTE )); then xdotool click 2; fi
-        else
-          echo $str | xsel -ib
-          # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
-          if (( $AUTOPASTE )); then xdotool key ctrl+v; fi
-        fi
-        ;;
-    "wayland")
-        if (( $PRIMESEL )); then
-          echo $str | wl-copy -p
-          # Simply clicking the middle mouse button. The user must take care of: 1. Window choice. 2. Position within window.
-          # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
-          if (( $AUTOPASTE )); then ydotool click 0xC2; fi
-        else
-          echo $str | wl-copy
-          # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
-          if (( $AUTOPASTE )); then ydotool key 37:1 55:1 55:0 37:0 ; fi
-        fi 
-        ;;
-    *)
-        echo $str
-        ;;
- esac
-fi
+send_audio
+handle_transcription

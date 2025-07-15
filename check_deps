@@ -1,0 +1,56 @@
+#!/bin/zsh
+
+# Checks dependencies
+blahst_depends() {
+    err=
+    verr=
+    command -v curl &>/dev/null || { echo "curl is missing" >&2 && err=1; }
+    #The next is needed if curl requests json output from the whisper.cpp or llama.cpp server
+    # command -v jq &>/dev/null || { echo "jq is missing" >&2 && err=1; }
+    command -v sox &>/dev/null || { echo "sox is missing" >&2 && err=1; }
+    [[ -n $WHISPERFILE ]] || command -v transcribe &>/dev/null || { echo -e "whisper.cpp is missing (see https://github.com/ggerganov/whisper.cpp)\
+    \n\tor download a whisperfile portable executable w model inside (see https://huggingface.co/Mozilla/whisperfile/tree/main)\
+    \n\tand create 'transcribe' in your PATH as a symbolic link to the chosen executable, e.g.\n\t\
+    'ln -s /full/path/to/whisper.cpp/whisper-cli \$HOME/.local/bin/transcribe'" >&2 ; err=1 ; }
+    command -v llam &>/dev/null || { echo -e "llama.cpp is missing for interaction with an AI (see https://github.com/ggerganov/llama.cpp)\
+    \n\tor download a llamafile portable executable (see https://huggingface.co/Mozilla)\
+    \n\tand create in your PATH a symbolic link to the llama-cli executable, e.g.\n\t\
+    'ln -s /full/path/to/llama.cpp/llama-cli \$HOME/.local/bin/llam'" >&2 ; err=1 ; }
+    command -v piper &>/dev/null || { echo -e "piper text-to-speech is missing (see https://github.com/rhasspy/piper)\
+    \n\tto use the AI assistant and translator features with human-like voice response." >&2 ; err=1 ; }
+    # We will use zenity or notify-send (part of libnotify or libnotify-bin in some distros) for desktop notifications:
+    command -v zenity notify-send &>/dev/null || { echo "Either one of zenity or notify-send (libnotify-bin) is needed for error reporting" >&2 ; err=1 ; }
+
+    #Now let's check if we are in X11 or Wayland and use the right utility:
+    wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"
+    if [[ wm == "wayland" ]]; then
+        command -v wl-copy &>/dev/null || { echo "wl-copy is missing for clipboard control" >&2 ; err=1 ; }
+        if (( $AUTOPASTE )); then
+           command -v ydotool &>/dev/null || { echo "ydotool is missing to have the transcribed text pasted automatically at the cursor position " >&2 ; err=1 ; }
+        fi
+    elif [[ wm == "x11" ]]; then
+        command -v xsel &>/dev/null || { echo "xsel is missing for clipboard control." >&2 ; err=1 ; }
+        if (( $AUTOPASTE )); then
+           command -v xdotool &>/dev/null || { echo "xdotool is missing to have the transcribed text pasted automatically at the cursor position " >&2 ; err=1 ; }
+        fi
+    fi
+
+    for llv in "$WMODEL" "$LLMODEL" "$LIGHTLMODEL" "$HEAVYMODEL" "$TTSMODEL" "$TRANSMODEL" "$CODEMODEL" "$BOTMODEL"; do
+	[[ -f $llv ]] || verr+="\nModel file \"$llv\" not found"
+    done
+
+    [[ -n $LLAMAFILE ]] && { command -v $LLAMAFILE &>/dev/null || { verr+="\nNot found: " "Executable $LLAMAFILE not found." ; } }
+    [[ -n $WHISPERFILE ]] && { command -v $WHISPERFILE &>/dev/null || { verr+="\nNot found: " "Executable $WHISPERFILE not found." ; } }
+    [[ -n $verr ]] && desknote "$verr"
+    [[ -n $err || -n $verr ]] && exit 1
+
+    exit 0
+}
+
+[[ -f blahst.cfg ]] && source blahst.cfg || source $HOME/.config/blahst.cfg
+[[ -f blahst-helpers ]] && source blahst-helpers || source $HOME/.local/bin/blahst-helpers
+
+cmd="$1" && shift
+[[ $cmd == wsi || $cmd == wsiAI || $cmd == blooper ]] && AUTOPASTE=1
+[[ $cmd == blahstbot ]] && AUTOPASTE=0
+blahst_depends

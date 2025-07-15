@@ -1,0 +1,59 @@
+#!/bin/zsh
+
+#---HELPER FUNCTIONS--------------------------------------------------------------------------
+#Notification code, prefers zenity, then notify-send, which should be available across the
+#most distributions, in package libnotify or libnotify-bin:
+desknote() {
+    local title="$1"
+    local message="$2"
+
+    if command -v zenity &> /dev/null; then
+        zenity --no-wrap --info --text="${title}.\n$message"
+    elif command -v notify-send &> /dev/null; then
+        notify-send "$title" "$message"
+    elif command -v kdialog &> /dev/null; then
+        kdialog --passivepopup "$message" 5
+    else
+        echo "Notification Message: $message" >&2
+        echo "Please install zenity or notify-send to use notifications." >&2
+        echo "You can install either using your package manager, e.g.:" >&2
+        echo "  sudo apt-get install zenity or sudo apt-get install libnotify-bin" >&2
+        echo "  sudo yum install zenity or sudo apt-get install libnotify" >&2
+        echo "  sudo pacman -S zenity, etc." >&2
+    fi
+}
+#Choose a prompt (role) for the LLM:
+select_role () {
+    local keys=("${(@k)BMPROMPT}")
+    local role=$(zenity --title="BlahstBot Prompt" --height=$((${#keys} * 50)) --list --text="Select an LLM Role:" --column="Role" "${keys[@]}")
+    echo $BMPROMPT[$role] > $TEMPD/chatbot_prompt
+    [[ "$role" == "Personal Doctor" ]] && BOTMODEL="$AI/medgemma-27b-text-it-UD-IQ3_XXS.gguf"
+    #we do not want to have the normally false status of the condition above become the function status:
+    return 0
+}
+
+
+# First argument: x11 || wayland
+# Second argument: mouse || ctrl-v
+# if omitted, it's guessed from $PRIMESEL
+
+# When simply clicking the middle mouse button, the user must take care of: 1. Window choice. 2. Position within window.
+# Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning.
+# The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
+autopaste() {
+    (( ! $AUTOPASTE )) && return
+    wm="$1" && shift # "x11" || "wayland"
+    if [[ -n "$1" ]]; then
+	paste_type="$1" && shift # "mouse" || "ctrl-v"
+    else
+	(( $PRIMESEL )) && paste_type=mouse || paste_type=ctrl-v
+    fi
+
+    # wayland + ydotool
+    if [[ $wm == wayland ]] && command -v ydotool &> /dev/null; then
+	# The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
+	[[ $paste_type == mouse ]] && ydotool click 0xC2 || ydotool key 37:1 55:1 55:0 37:0
+    else # xdotool fallback
+	[[ $paste_type == mouse ]] && xdotool click 2 || xdotool key ctrl+v
+    fi
+}

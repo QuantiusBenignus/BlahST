@@ -5,15 +5,9 @@
 if [ ! -e "wsi" ]; then echo "Please, cd into the directory where the wsi script (part of BlahST) is located." ; exit 1 ; fi 
 # Define the directory for the executable scripts
 dir="$HOME/.local/bin"
-echo ""
+dir_config="$HOME/.config"
 echo ">>>>>>>>>>>> BlahST Installation <<<<<<<<<<<<<"
-echo ""
-echo "Checking for $dir..."
-# Check if the directory exists, if not, create it
-if [ ! -d "$dir" ]; then
-    mkdir -p "$dir"
-    echo "Directory $dir created."
-fi
+mkdir -vp "$dir" "$dir_config"
 
 if echo "$PATH" | grep -q ":$dir:"; then
     echo "Directory $dir is already in the PATH."
@@ -36,17 +30,12 @@ echo ""
 echo "1. ---------------------------------------------------------"
 echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi" "wsiml" "wsiAI" "blooper" "blahstbot"
-cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper" "blahstbot" "blahst.cfg"
+chmod +x wsi wsiml wsiAI blooper blahstbot blahst-helpers
+cp -t "$dir" wsi wsiml wsiAI blooper blahstbot
+cp -t "$dir_config" blahst.cfg
 echo "BlahST scripts copied and made executable. \$PATH updated."
 
-echo ""
-echo "2.=========================================================="
-echo -n "Checking for sox..."
-if ! command -v sox >/dev/null  2>&1; then
-    echo "sox is not installed. Please, install sox (e.g. sudo apt install sox...)"; exit  1
-fi
-echo "   OK"
+# ToDo: ask user to configure blahst.cfg then just run `check_deps`
 
 #Now let's check if we are in X11 or Wayland and use the right utility:
 wm="${XDG_SESSION_TYPE:-$(loginctl show-session $(loginctl | grep $(whoami) | awk '{print $1}') -p Type --value)}"

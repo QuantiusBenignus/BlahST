@@ -24,15 +24,12 @@ pidof -q wsiAI && exit 0
 
 #---USER CONFIGURATION BLOCK----------------------------------------------------------------
 #The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
-source $HOME/.local/bin/blahst.cfg
+source $HOME/.config/blahst.cfg
+source $HOME/.local/bin/blahst-helpers
 #Local overrides:
 AUTOPASTE=1
 #PRIMESEL=1
 #---END USER CONFIG BLOCK-------------------------------------------------------------------
- 
-#---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
-(( $blahst_deps )) || blahst_depends 
-#---END CHECK DEPENDENCIES.-----------------------------------------------------------------
 
 #Hear the complaints of the above tools and do not continue with the sequence:
 set -e
@@ -233,28 +230,12 @@ else
 #echo "Pasting now: "
  case "$wm" in
     "x11")
-        if (( $PRIMESEL )); then
-          echo $str | xsel -ip
-          # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
-          # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
-          if (( $AUTOPASTE )); then xdotool click 2 ; fi
-        else
-          echo $str | xsel -ib
-          # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
-          if (( $AUTOPASTE )); then xdotool key ctrl+v ; fi
-        fi
+        echo $str | { (( $PRIMESEL )) && xsel -ip || xsel -ib; }
+	autopaste $wm
         ;;
     "wayland")
-        if (( $PRIMESEL )); then
-          echo $str | wl-copy -p
-          # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
-          # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
-          if (( $AUTOPASTE )); then ydotool click 0xC2; fi
-        else
-          echo $str | wl-copy
-          # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
-          if (( $AUTOPASTE )); then ydotool key 37:1 55:1 55:0 37:0 ; fi
-        fi 
+	echo $str | { (( $PRIMESEL )) && wl-copy -p || wl-copy; }
+	autopaste $wm
         ;;
     *)
         echo $str
