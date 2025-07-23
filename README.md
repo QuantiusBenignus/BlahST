@@ -43,7 +43,7 @@ flowchart LR
     style net fill:#1af,stroke:#333,stroke-width:2px
     E0==>ST 
     E1 ==> ST[🎤Speech-to-Text Input Anywhere]
-    E1 ==> D[✨Experimental AI Tools]
+    E1 ==> D[✨Experimental AI Tools <br> One-shot LLM Interaction]
     E2 ==>|flags -l -t|Ml[🌐 Multilingual Speech to Text.
 Translation into English]
     E3 ==> D1[⌨️ Continuous Dictation <br> Automatic Paste and Stop]
