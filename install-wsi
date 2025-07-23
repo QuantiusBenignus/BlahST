@@ -36,8 +36,8 @@ echo ""
 echo "1. ---------------------------------------------------------"
 echo "Copying the orchestrator script(s) to $HOME/.local/bin..."
 # Copy the script files
-chmod +x "wsi" "wsiml" "wsiAI" "blooper" "blahstbot"
-cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper" "blahstbot" "blahst.cfg"
+chmod +x "wsi" "wsiml" "wsiAI" "blooper" "blahstbot" "blahstream"
+cp -t "$dir" "wsi" "wsiml" "wsiAI" "blooper" "blahstbot" "blahstream" "blahst.cfg"
 echo "BlahST scripts copied and made executable. \$PATH updated."
 
 echo ""
@@ -167,7 +167,7 @@ if [ "$confirm" = "y" ]; then
     echo "Available model files:"
     echo "$bin_files"
     # Prompt user to select a file
-    echo "Choose a model file. At least ggml-small.bin recommended for multilingual use"
+    echo "Choose a model file. At least ggml-small.bin recommended for multilingual use."
     echo -n "Enter the line number of the model file to use by default: "
     read choice
     #if [ "$choice" =~ ^[0-9]+$ ]; then

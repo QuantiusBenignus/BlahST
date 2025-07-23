@@ -1,0 +1,335 @@
+#!/usr/bin/zsh
+# Due to advanced parsing requirements for some new features, bash in not supported in new versions of the script. 
+# Copyright (c) 2025 Quantius Benignus
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#-------------------------------------------------------------------------------------------
+
+# NAME: blahstream
+# PREREQUSITES:
+#  - zsh shell installation 
+#  - whisper.cpp installed (https://github.com/ggerganov/whisper.cpp) or a whisperfile
+#  - recent versions of 'sox', 'curl', 'xsel' or 'wl-copy' CLI tools.
+#  - llama.cpp or llamafile (and models) for AI chatbot functionality.
+#  - xdotool (X11) or ydotool (Wayland) for automatic paste after successful transcription
+#  - Piper neural text-to-speech engine for spoken AI assistant response 
+#-------------------------------------------------------------------------------------------
+#Time stamps for timing the performance of the various stages (Un/Comment as needed): 
+stmp=$(date +%s%N)
+# Are we already running this? (prevent multiple hotkey presses)
+pidof -q blahstream && exit 0
+
+#---USER CONFIGURATION BLOCK----------------------------------------------------------------
+#The main configuration for this and all other BlahST tools is now in blahst.cfg, please, edit that file as needed.
+source $HOME/.local/bin/blahst.cfg
+#---Local Overrides---:
+BOTPROMPT=""
+#You can set this default to 0 and use the -a flag instead:
+AUTOPASTE=1
+pastebuffer=""
+#---END USER CONFIG BLOCK-------------------------------------------------------------------
+ 
+#---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
+(( $blahst_deps )) || blahst_depends 
+#---END CHECK DEPENDENCIES.-----------------------------------------------------------------
+
+#Hear the complaints of components and do not continue with the sequence:
+set -e
+set -o pipefail 
+
+clipaste() {
+    local str="$1"
+    str="${str//'\n\n'/\n}"
+    #xsel or wl-copy:
+    case "$wm" in
+        "x11")
+            [[ -z $in_window ]] && in_window=$(xdotool getactivewindow)
+            if (( PRIMESEL )); then
+              echo "$str" | xsel -ip
+              # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
+              # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
+              if (( AUTOPASTE )); then xdotool click 2 ; fi
+            else
+              # The automatic paste option makes more sense when using the CLIPBOARD, not primary sellection.
+              # Handle a shift of focus to another window.
+              if (( AUTOPASTE )); then 
+                if [[ $(xdotool getactivewindow) -eq $in_window ]]; then 
+                  if [ -n "$pastebuffer" ]; then
+                    echo "$pastebuffer" | xsel -ib
+                    pastebuffer=""
+                    xdotool key ctrl+v
+                  fi
+                  echo "$str" | xsel -ib
+                  xdotool key ctrl+v 
+                else
+                  # If the focus is not on the initial window, buffer the text
+                  pastebuffer+="$str"
+                fi
+              else
+                echo "$str" | xsel -ab
+              fi
+            fi
+            ;;
+        "wayland")
+            if (( PRIMESEL )); then
+              echo $str | wl-copy -p
+              # Simply clicking the middle mouse button. The user has to take care of: 1. Window choice. 2. Position within window.
+              # Thus, autopaste from the primary selection is more unpredictable and requires extra care of window focus and mouse pointer repositioning. 
+              if (( AUTOPASTE )); then ydotool click 0xC2; fi
+            else
+              echo $str | wl-copy
+              # The key sym sequence may differ from the one below on a variety of systems and keyboard layouts:
+              if (( AUTOPASTE )); then ydotool key 37:1 55:1 55:0 37:0 ; fi
+            fi 
+            ;;
+        *)
+            echo $str
+            ;;
+    esac
+}
+
+tts_play() {
+  local text="${1:='Okay, let see...'}"
+  local lc="$2"
+  local model="$TTSMODEL"
+  local rate="$rtts"
+  text="${text//\*/}"
+  text="${text//\#/}"
+  text="${text//'\n'/}"
+  if [[ $# -eq 2 ]]; then 
+      if [[ -n "${TTSM[$lc]}" ]]; then
+        local model="$PPRMDIR/${TTSM[$lc]}"
+        local rate="$modrate[$lc]"
+      else
+        [[ ${#lc} -gt 2 ]] || text="Warning. A text-to-speech model is not available for this language."
+      fi
+  fi
+    piper --model "$model" --output-raw <<< "$text" 2>/dev/null | aplay -r "$rate" -f S16_LE -t raw - 2>/dev/null
+}
+
+chunker() {
+echo "Chunking now:"$((($(date +%s%N) - stmp)/1000000))" ms" 
+stmp=$(date +%s%N)
+    local fifo=$1
+    local langc buffer=""
+    local inblock=0
+    while IFS= read -r line; do
+        #strr=$(echo -E "${line:5}" | jq --unbuffered -r '.choices[0].delta.content')
+        buffer+="$line"
+        case "$line" in
+            *[ⓐ-ⓩ])
+                langc+="$(printf "\\U$( printf '%x' $(( $(printf "%d" "'$line[-1]") - 9327 )))")"
+                inblock=$((1 - inblock))
+                if (( inblock )); then
+                    clipaste "${buffer}"
+                    tts_play "${buffer:0:-1}"
+                    result+="$buffer"
+                    buffer=""
+                else
+                    #langc=${langc//[^a-z]/}
+                    clipaste "${buffer}"
+                    tts_play "${buffer:0:-1}" $langc
+                    result+="$buffer"
+                    buffer=""
+                    langc=""
+                fi
+               ;;
+            *[.:?\!]*)
+                (( inblock )) && continue
+                local test="${buffer:(-5)}"
+                [[ $test = *.*.* ]] || [[ $test = *[[:punct:]][^[:space:]]* ]] && continue
+                clipaste "${buffer}"
+                tts_play "${buffer}"
+                result+="$buffer"
+                buffer=""
+                ;;
+        esac 
+    done < "$fifo"
+    # Final flush if there's any remaining text
+    if [[ -n "$buffer" ]]; then
+        clipaste "$buffer"
+        tts_play "$buffer"
+        result+="$buffer"
+    fi
+    echo -e "Answer:\n$result" >> $TEMPD/chatfile
+    echo -e "Answer:\n$result" >> $TEMPD/chatcontext
+    #result="${result//([ⓐ-ⓩ][ⓐ-ⓩ])/}"
+echo "Chunking done:"$((($(date +%s%N) - stmp)/1000000))" ms" 
+stmp=$(date +%s%N)
+}
+
+# Process command line arguments
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -p|--primary)
+            PRIMESEL=1
+            shift
+            ;;
+        -a|--autopaste)
+            AUTOPASTE=1
+            shift
+            ;;
+        -w|--whisperfile)
+            whf="$WHISPERFILE"
+            shift
+            ;;
+        -n|--netapi)
+            #This uses the hostname or IP and port specified in the config block
+            #Can be overwritten, supplied as command line argument IP:PORT instead of this option
+            IPnPORT="$WHOST:$WPORT" 
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                #echo "Can't connect to whisper.cpp server at provided address!" >&2
+                #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
+                pidof whserver > /dev/null  2>&1 || { whserver --host $WHOST --port $WPORT -t $NTHR -nt -fa -sns -m $WMODEL 2>/dev/null & }
+                desknote "No connection to whisper.cpp server" "Starting server at $IPnPORT now, please, press OK..."
+            fi
+            shift
+            ;;
+        -h|--help)
+            echo -e "Have a spoken conversation with your Linux computer.\nNow with the ability to append a mouse-selected text to any spoken question/statement."
+            echo -e "The conversation text will be streamed into any focused window.\nIn X11, if the focus is shifted, the text will be buffered until that window is active again." 
+            echo -e "\nUsage: $0 [-p|--primary] [-n|--netapi] [-w|--whisperfile] [-a|--autopaste]\n"
+            echo -e "  -p, --primary: Use PRIMARY selection instead of clipboard\n"
+            echo -e "  -a, --autopaste: Autopaste the conversation text in the window active at startup.\n"
+            echo -e "  -n, --netapi: Use whisper.cpp/llama.cpp servers with the host:port in the blahst.cfg GONFIG block\n"
+            echo -e "  -w, --whisperfile: Use whisperfile instead of standalone whisper.cpp. Note that the whisperfile will use the script-configured (not embedded) model.\n"
+            echo -e "Any other non-flag command-line argument is expected to be an <IP:port> pair. Error will occur if diferent."
+            echo -e "\nPlease, adjust blahstream configuration (LLM model, LLM options, prompt, TTS, etc. ) in blahst.cfg"
+            echo -e "To reset the context simply say 'Reset context' and the previous conversation will be cleared, which will speed up inference."
+            echo -e "The llama-server and whisper-server can be shut down with the verbal command 'Shut down' or from the model role menu." 
+            echo -e "\nThis AI chat tool is experimental and work in progress.\n"
+            echo -e "CAUTION: Transfering any AI-generated Linux commands to your command line is at your own risk. Make sure you know what you are doing."
+            exit 0
+            ;;
+        *)
+            #The network address and port should have already been sanitized
+            IPnPORT=$1
+            if [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $IPnPORT)" != "200" ]]; then
+                #echo "Can't connect to whisper.cpp server at provided address!" >&2
+                #Uncomment the next line if you want to have the server start locally on a call (assuming whserver symlink is set).
+                pidof whserver > /dev/null  2>&1 || { whserver --host $WHOST --port $WPORT -t $NTHR -nt -fa -sns -m $WMODEL 2>/dev/null & }
+                desknote "No connection to whisper.cpp server" "Starting server at $IPnPORT now, please, press OK..."
+            fi
+            shift
+            ;;
+    esac
+done
+echo "Just definitions. Arg parsing. "$((($(date +%s%N) - stmp)/1000000))" ms" 
+stmp=$(date +%s%N)
+
+#Initialize llama-server:
+if  [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $LHOST:$LPORT/health)" != "200" ]]; then
+    pidof llamserver > /dev/null  2>&1 || { llamserver --host $LHOST --port $LPORT -t $NTHR -m $BOTMODEL ${(z)BMOPTIONS} 2>/dev/null & }
+    #desknote "No connection to llama.cpp server" "Starting server at $LHOST:$LPORT now, please, press OK..."
+    select_role
+    if [[ -z "$BOTPROMPT" ]]; then 
+        pkill llamserver && pkill whserver && tts_play "OK, the servers have been shut down." && exit 0
+    fi
+    touch $TEMPD/chatfile
+    pidof llamserver > /dev/null  2>&1 && { tts_play $BOTGREETING; }
+fi ;
+
+
+echo "Server init or check: "$((($(date +%s%N) - stmp)/1000000))" ms"
+stmp=$(date +%s%N)
+
+echo "Recording now: "
+rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 3% channels 1 2>/dev/null
+
+echo "Finished. Sending for ASR: "$((($(date +%s%N) - stmp)/1000000))" ms"
+stmp=$(date +%s%N)
+
+if [[ -n "$IPnPORT" ]] ; then 
+    #echo "Sending to server now: "
+    str=$(curl -S -s $IPnPORT/inference \
+        -H "Content-Type: multipart/form-data" \
+        -F file="@$ramf" \
+        -F temperature="0.0" \
+        -F temperature_inc="0.2" \
+        -F response_format="text")
+elif [[ "$whf" == *.llamafile ]]; then
+    #echo "Using $whf:"
+    str="$($whf -t $NTHR -nt --gpu auto -f $ramf 2>/dev/null)"     
+else
+    #A default fallback if the whisper server is offline.
+    #echo "Transcribing now: "
+    str="$(transcribe -t $NTHR -nt -fa -m $WMODEL -f $ramf 2>/dev/null)" 
+fi
+
+echo "Got text back after: "$((($(date +%s%N) - stmp)/1000000))" ms" 
+stmp=$(date +%s%N)
+
+# Whisper detected non-speech events such as (wind blowing): 
+str="${str/\(*\)}"   
+str="${str#$'\n'}"    
+if [[ "$wm" == "x11" ]]; then
+  str+=$'\n'$(xsel -op)
+  xsel -cp
+elif [[ "$wm" == "wayland" ]]; then
+  str+=$'\n'$(wl-paste -p)
+  wl-copy -cp
+fi
+
+if [[ -n "$ZSH_VERSION" ]] ; then
+   str="${str# }"
+   str="${(C)str:0:1}${str#?}"
+   if [[ $str == *[Rr]eset\ context* ]] || [[ $str == *[Cc]hange\ the\ subject* ]]; then
+       : > $TEMPD/chatcontext
+       : > $TEMPD/chatfile
+       select_role
+       if [[ -z "$BOTPROMPT" ]]; then 
+           pkill llamserver && pkill whserver && tts_play "OK, the servers have been shut down." && exit 0
+       fi
+       tts_play "OK, the context was reset, let us start fresh."
+       exit 0
+   fi
+   [[ "$str" == *[Ss]hut\ down* ]] && pkill llamserver && pkill whserver && tts_play "OK, the servers have been shut down." && exit 0     
+        
+        echo -e "\nUser:\n$str" >> $TEMPD/chatcontext
+        echo -e "\nUser:\n$str" >> $TEMPD/chatfile
+        clipaste "\nUser:\n$str"
+        strai="$(< $TEMPD/chatcontext)"
+        strai="${strai//$'\n'/}"
+        strai="${strai//\"/*}"
+        
+        FIFO=$(mktemp -p $TEMPD -u)
+        mkfifo "$FIFO"
+        chunker "$FIFO" &
+
+echo "Prepped text. Now streaming into FIFO and processing: "$((($(date +%s%N) - stmp)/1000000))" ms" 
+stmp=$(date +%s%N)
+
+        curl -S -s -N "$LHOST:$LPORT/v1/chat/completions" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer no-key" \
+          -d "$(jq -n \
+            --arg cur_prompt "${BOTPROMPT}" \
+            --arg strap "${strai}" \
+            '{temperature: 0.13, n_keep: -1, cache_prompt: true, model: "BlahStream", stream: true, messages: [
+              {role: "system", content: $cur_prompt},
+              {role: "user", content: $strap}]}')" | grep --line-buffered -Po '"content":"\K[^"}}]*' > "$FIFO"
+#jq is slower, grep hasn't failed once in the tests.
+        rm -f "$FIFO"
+         
+        (( $(stat -c %s $TEMPD/chatcontext) > 2500 )) && curl -S -s -N "$LHOST:$LPORT/v1/chat/completions" \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer no-key" \
+          -d "$(jq -n \
+            --arg cur_prompt "You summarize text to reduce it size. If you notice signifficant context change in the text, summarize only the later part with the newest context. The goal is to minimize context size to not more than 400 words but retain key points. Here is the text:" \
+            --arg strap "$(cat $TEMPD/chatfile)" \
+            '{temperature: 0.13, n_keep: -1, cache_prompt: true, model: "BlahStream", messages: [
+              {role: "system", content: $cur_prompt},
+              {role: "user", content: $strap}]}')" | jq -r '.choices[0].message.content' > $TEMPD/chatcontext
+        
+else
+    #Not testing for AI input if shell is not zsh:
+    desknote "Unknown shell, assuming bash, LLM features suppressed" "Transcribed text can be pasted..."
+    str="${str##+([[:space:]])}"
+    str="${str^}"
+fi
