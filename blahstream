@@ -21,7 +21,7 @@
 #  - Piper neural text-to-speech engine for spoken AI assistant response 
 #-------------------------------------------------------------------------------------------
 #Time stamps for timing the performance of the various stages (Un/Comment as needed): 
-stmp=$(date +%s%N)
+#stmp=$(date +%s%N)
 # Are we already running this? (prevent multiple hotkey presses)
 pidof -q blahstream && exit 0
 
@@ -114,8 +114,8 @@ tts_play() {
 }
 
 chunker() {
-echo "Chunking now:"$((($(date +%s%N) - stmp)/1000000))" ms" 
-stmp=$(date +%s%N)
+#echo "Chunking now:"$((($(date +%s%N) - stmp)/1000000))" ms" 
+#stmp=$(date +%s%N)
     local fifo=$1
     local langc buffer=""
     local inblock=0
@@ -160,8 +160,8 @@ stmp=$(date +%s%N)
     echo -e "Answer:\n$result" >> $TEMPD/chatfile
     echo -e "Answer:\n$result" >> $TEMPD/chatcontext
     #result="${result//([ⓐ-ⓩ][ⓐ-ⓩ])/}"
-echo "Chunking done:"$((($(date +%s%N) - stmp)/1000000))" ms" 
-stmp=$(date +%s%N)
+#echo "Chunking done:"$((($(date +%s%N) - stmp)/1000000))" ms" 
+#stmp=$(date +%s%N)
 }
 
 # Process command line arguments
@@ -220,8 +220,6 @@ while [ $# -gt 0 ]; do
             ;;
     esac
 done
-echo "Just definitions. Arg parsing. "$((($(date +%s%N) - stmp)/1000000))" ms" 
-stmp=$(date +%s%N)
 
 #Initialize llama-server:
 if  [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $LHOST:$LPORT/health)" != "200" ]]; then
@@ -235,15 +233,11 @@ if  [[ "$(curl -s -f -o /dev/null -w '%{http_code}' $LHOST:$LPORT/health)" != "2
     pidof llamserver > /dev/null  2>&1 && { tts_play $BOTGREETING; }
 fi ;
 
-
-echo "Server init or check: "$((($(date +%s%N) - stmp)/1000000))" ms"
-stmp=$(date +%s%N)
-
-echo "Recording now: "
+#echo "Recording now: "
 rec -q -t wav $ramf rate 16k silence 1 0.1 1% 1 2.0 3% channels 1 2>/dev/null
 
-echo "Finished. Sending for ASR: "$((($(date +%s%N) - stmp)/1000000))" ms"
-stmp=$(date +%s%N)
+#echo "Finished. Sending for ASR: "$((($(date +%s%N) - stmp)/1000000))" ms"
+#stmp=$(date +%s%N)
 
 if [[ -n "$IPnPORT" ]] ; then 
     #echo "Sending to server now: "
@@ -262,8 +256,8 @@ else
     str="$(transcribe -t $NTHR -nt -fa -m $WMODEL -f $ramf 2>/dev/null)" 
 fi
 
-echo "Got text back after: "$((($(date +%s%N) - stmp)/1000000))" ms" 
-stmp=$(date +%s%N)
+#echo "Got text back after: "$((($(date +%s%N) - stmp)/1000000))" ms" 
+#stmp=$(date +%s%N)
 
 # Whisper detected non-speech events such as (wind blowing): 
 str="${str/\(*\)}"   
@@ -301,9 +295,6 @@ if [[ -n "$ZSH_VERSION" ]] ; then
         FIFO=$(mktemp -p $TEMPD -u)
         mkfifo "$FIFO"
         chunker "$FIFO" &
-
-echo "Prepped text. Now streaming into FIFO and processing: "$((($(date +%s%N) - stmp)/1000000))" ms" 
-stmp=$(date +%s%N)
 
         curl -S -s -N "$LHOST:$LPORT/v1/chat/completions" \
           -H "Content-Type: application/json" \
