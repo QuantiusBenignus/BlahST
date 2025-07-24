@@ -140,10 +140,10 @@ chunker() {
                     langc=""
                 fi
                ;;
-            *[.:?\!]*)
+            [.:?\!\n]*)
                 (( inblock )) && continue
                 local test="${buffer:(-5)}"
-                [[ $test = *.*.* ]] || [[ $test = *[[:punct:]][^[:space:]]* ]] && continue
+                [[ $test = *., ]] && continue
                 clipaste "${buffer}"
                 tts_play "${buffer}"
                 result+="$buffer"
