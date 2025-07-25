@@ -33,6 +33,7 @@ BOTPROMPT=""
 #You can set this default to 0 and use the -a flag instead:
 AUTOPASTE=1
 pastebuffer=""
+astrgg=0
 #---END USER CONFIG BLOCK-------------------------------------------------------------------
  
 #---CHECK DEPENDENCIES.-----Run blahst_depends only if needed or requested----------
@@ -102,6 +103,7 @@ tts_play() {
   text="${text//\*/}"
   text="${text//\#/}"
   text="${text//'\n'/}"
+  (( astrgg )) && text="${text//n/}"
   if [[ $# -eq 2 ]]; then 
       if [[ -n "${TTSM[$lc]}" ]]; then
         local model="$PPRMDIR/${TTSM[$lc]}"
@@ -140,10 +142,10 @@ chunker() {
                     langc=""
                 fi
                ;;
-            [.:?\!\n]*)
+            *'\n')
                 (( inblock )) && continue
-                local test="${buffer:(-5)}"
-                [[ $test = *., ]] && continue
+                #local test="${buffer:(-5)}"
+                #[[ $test = *., ]] && continue
                 clipaste "${buffer}"
                 tts_play "${buffer}"
                 result+="$buffer"
@@ -199,6 +201,7 @@ while [ $# -gt 0 ]; do
             echo -e "  -a, --autopaste: Autopaste the conversation text in the window active at startup.\n"
             echo -e "  -n, --netapi: Use whisper.cpp/llama.cpp servers with the host:port in the blahst.cfg GONFIG block\n"
             echo -e "  -w, --whisperfile: Use whisperfile instead of standalone whisper.cpp. Note that the whisperfile will use the script-configured (not embedded) model.\n"
+            echo -e "  -e, --easter: astr gg.;) \n"
             echo -e "Any other non-flag command-line argument is expected to be an <IP:port> pair. Error will occur if diferent."
             echo -e "\nPlease, adjust blahstream configuration (LLM model, LLM options, prompt, TTS, etc. ) in blahst.cfg"
             echo -e "To reset the context simply say 'Reset context' and the previous conversation will be cleared, which will speed up inference."
@@ -206,6 +209,10 @@ while [ $# -gt 0 ]; do
             echo -e "\nThis AI chat tool is experimental and work in progress.\n"
             echo -e "CAUTION: Transfering any AI-generated Linux commands to your command line is at your own risk. Make sure you know what you are doing."
             exit 0
+            ;;
+        -e|--easter)
+            astrgg=1
+            shift
             ;;
         *)
             #The network address and port should have already been sanitized
